@@ -62,8 +62,8 @@
 #define DIST_FROM_BUCKET               37
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
-#define IR_RANGE_1											1000
-#define IR_RANGE_2											2000
+#define IR_RANGE_1										 650
+#define IR_RANGE_2										 1800
 
 int BaseMode;
 int SecondsToDelay;
@@ -582,27 +582,27 @@ task main()
 
 	wait1Msec(SecondsToDelay);
 
-	Translate(-4300, 70);
+	Translate(-4150, 70);
 	WaitForMoveToFinish();
 
 	wait1Msec(500);
 
-	Rotate(84, 70); //Turn Right
+	Rotate(83, 70); //Turn Right
 	WaitForMoveToFinish();
 
 	wait1Msec(500);
 
-	Translate(-8000, 30);
-	
+	Translate(-8000, 20);
+
 	while(b_TrajectoryEnabled == true)
 	{
 		//nMotorEncoder(RightMotor) = 0;
 		//nMotorEncoder(LeftMotor) = 0;
 
 		IRSensorValue = SensorValue(IRSensor);
-		
+
 		//wait1Msec(1000);
-		
+
 		if(IRSensorValue == 5)//Set to 2 for Comp
 		{
 			wait1Msec(500);
@@ -613,7 +613,7 @@ task main()
 			// before reading position.
 			wait1Msec(1000);
 
-			Position = nMotorEncoder(RightMotor);
+			Position = nMotorEncoder(LeftMotor);
 		}
 		else
 		{
@@ -621,51 +621,57 @@ task main()
 		}
 	}
 
-	if(Position < IR_RANGE_1)
+	if(abs(Position) <= IR_RANGE_1)
 	{
-		Translate(-700, 30);
+		Translate(-790, 30);
 		WaitForMoveToFinish();
 	}
-	else if(Position < IR_RANGE_2)
+	else if(abs(Position) > IR_RANGE_1 && abs(Position) < IR_RANGE_2)
 	{
-		Translate(-2000, 90);
+		Translate(-1300, 30);
 		WaitForMoveToFinish();
 
-		Rotate(-45, 70); //Turn Left
+		Rotate(-82, 30); //Turn Left
 		WaitForMoveToFinish();
+		
+		wait1Msec(500);
 
-		Translate(-2000, 90);
+		Translate(-800, 30);
 		WaitForMoveToFinish();
 	}
 	else //Position > IR_RANGE_2 (IR_RANGE_3)
 	{
-		Translate(-2000, 90);
+		/*Translate(-2000, 90);
 		WaitForMoveToFinish();
 
 		Rotate(-90, 70); //Turn Left
 		WaitForMoveToFinish();
 
 		Translate(-2000, 90);
-		WaitForMoveToFinish();
+		WaitForMoveToFinish();*/
 	}
 
-	LiftHook();
+	if(abs(Position) <= IR_RANGE_1)
+	{
 
-	Rotate(-55, 30);//84
-	WaitForMoveToFinish();
-	
-	wait1Msec(1000);
-	
-	Translate(-700, 30);
-	WaitForMoveToFinish();
-	
-	Rotate(-22, 30);//84
-	WaitForMoveToFinish();
-	
-	wait1Msec(1000);
-	
-	Translate(4500, 70);
-	WaitForMoveToFinish();
+		LiftHook();
+
+		Rotate(-55, 30);//84
+		WaitForMoveToFinish();
+
+		wait1Msec(1000);
+
+		Translate(-800, 30);
+		WaitForMoveToFinish();
+
+		Rotate(-20, 30);//84
+		WaitForMoveToFinish();
+
+		wait1Msec(1000);
+
+		Translate(4500, 70);
+		WaitForMoveToFinish();
+	}
 
 #if DEBUG_AUTONOMOUS_ROTATE
 	for(Index=0; Index<ARRAY_INDEX; Index++)
@@ -825,57 +831,57 @@ void LiftHook()
 
 /*void ChoosePath()
 {
-	nButtonPresses = 1;
-	eraseDisplay();
+nButtonPresses = 1;
+eraseDisplay();
 
-	while(nNxtButtonPressed != 0)
-	{
+while(nNxtButtonPressed != 0)
+{
 
-		nxtDisplayCenteredTextLine(1, "Which Path?");
+nxtDisplayCenteredTextLine(1, "Which Path?");
 
-		nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
+nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
 
-		if(nNxtButtonPressed == 3)
-		{
-			ChoosePosition();
-			while(nNxtButtonPressed != -1)//wait for release
-			{
-				//do nothing
-			}
-		}
+if(nNxtButtonPressed == 3)
+{
+ChoosePosition();
+while(nNxtButtonPressed != -1)//wait for release
+{
+//do nothing
+}
+}
 
-		if(nNxtButtonPressed == 1 && nButtonPresses <= 4)
-		{
-			nButtonPresses += 1;
-			nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
-			while(nNxtButtonPressed != -1)//wait for release
-			{
-				//do nothing
-			}
-		}
+if(nNxtButtonPressed == 1 && nButtonPresses <= 4)
+{
+nButtonPresses += 1;
+nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
+while(nNxtButtonPressed != -1)//wait for release
+{
+//do nothing
+}
+}
 
-		if(nNxtButtonPressed == 2 && nButtonPresses >= -5)
-		{
-			nButtonPresses -= 1;
-			nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
-			while(nNxtButtonPressed != -1)//wait for release
-			{
-				//do nothing
-			}
-		}
-	}
+if(nNxtButtonPressed == 2 && nButtonPresses >= -5)
+{
+nButtonPresses -= 1;
+nxtDisplayCenteredBigTextLine(3, "%d", nButtonPresses);
+while(nNxtButtonPressed != -1)//wait for release
+{
+//do nothing
+}
+}
+}
 
-	SelectedPath = nButtonPresses;
+SelectedPath = nButtonPresses;
 
-	eraseDisplay();
+eraseDisplay();
 
-	nxtDisplayCenteredBigTextLine(3, "%d", SelectedPath);
+nxtDisplayCenteredBigTextLine(3, "%d", SelectedPath);
 
-	wait1Msec(1000);
+wait1Msec(1000);
 
-	eraseDisplay();
+eraseDisplay();
 
-	return;
+return;
 }*/
 
 //Last stuff//
