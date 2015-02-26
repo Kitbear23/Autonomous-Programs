@@ -62,8 +62,8 @@
 #define DIST_FROM_BUCKET               37
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
-#define IR_RANGE_1										 650
-#define IR_RANGE_2										 1800
+#define IR_RANGE_1										 60050
+#define IR_RANGE_2										 80800
 
 int BaseMode;
 int SecondsToDelay;
@@ -587,12 +587,15 @@ task main()
 
 	wait1Msec(500);
 
-	Rotate(83, 70); //Turn Right
+	Rotate(80, 70); //Turn Right
 	WaitForMoveToFinish();
 
 	wait1Msec(500);
+	
+	Translate(1000, 30);
+	WaitForMoveToFinish();
 
-	Translate(-8000, 20);
+	Translate(-4000, 20);
 
 	while(b_TrajectoryEnabled == true)
 	{
@@ -603,7 +606,7 @@ task main()
 
 		//wait1Msec(1000);
 
-		if(IRSensorValue == 5)//Set to 2 for Comp
+		if(IRSensorValue == 8)//Set to 2 for Comp
 		{
 			wait1Msec(500);
 			// Abort Move
@@ -623,7 +626,7 @@ task main()
 
 	if(abs(Position) <= IR_RANGE_1)
 	{
-		Translate(-790, 30);
+		Translate(-650, 30);
 		WaitForMoveToFinish();
 	}
 	else if(abs(Position) > IR_RANGE_1 && abs(Position) < IR_RANGE_2)
@@ -661,15 +664,15 @@ task main()
 
 		wait1Msec(1000);
 
-		Translate(-800, 30);
+		Translate(-900, 30);
 		WaitForMoveToFinish();
 
-		Rotate(-20, 30);//84
+		Rotate(-31, 30);//84
 		WaitForMoveToFinish();
 
 		wait1Msec(1000);
 
-		Translate(4500, 70);
+		Translate(3500, 70);
 		WaitForMoveToFinish();
 	}
 
