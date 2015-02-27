@@ -594,6 +594,8 @@ task main()
 
 	Translate(1000, 30);
 	WaitForMoveToFinish();
+	
+	wait1Msec(1000);
 
 	Translate(-5000, 20);
 
@@ -626,12 +628,12 @@ task main()
 
 	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
 	{
-		Translate(890, 30);
+		Translate(835, 30);
 		WaitForMoveToFinish();
 	}
 	else if(abs(Position) <= IR_RANGE_2)
 	{
-		Translate(-1300, 30);
+		Translate(-3000, 30);
 		WaitForMoveToFinish();
 
 		//Rotate(-82, 30); //Turn Left
@@ -644,16 +646,16 @@ task main()
 	}
 	else //Position > IR_RANGE_2 (IR_RANGE_3)
 	{
-		/*Translate(-2000, 90);
+		Translate(-500, 30);
 		WaitForMoveToFinish();
 
-		Rotate(-90, 70); //Turn Left
+		Rotate(-85, 30); //Turn Left
 		WaitForMoveToFinish();
 
-		Translate(-2000, 90);
-		WaitForMoveToFinish();*/
+		Translate(-2800, 30);
+	  WaitForMoveToFinish();
 	}
-
+	
 	LiftHook();
 
 	Rotate(-55, 30);//84
@@ -661,15 +663,23 @@ task main()
 
 	wait1Msec(1000);
 
-	Translate(-710, 30);
-	WaitForMoveToFinish();
+	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
+	{
+		Translate(-710, 30);
+		WaitForMoveToFinish();
+	}
+	else if(abs(Position) <= IR_RANGE_2)
+	{
+		Translate(-800, 30);
+		WaitForMoveToFinish();
+	}
 
-	Rotate(-31, 30);//84
+	Rotate(-32, 30);//84
 	WaitForMoveToFinish();
 
 	wait1Msec(1000);
 
-	Translate(4000, 70);
+	Translate(3800, 70);
 	WaitForMoveToFinish();
 
 
