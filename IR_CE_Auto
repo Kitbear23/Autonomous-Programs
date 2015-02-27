@@ -62,8 +62,8 @@
 #define DIST_FROM_BUCKET               37
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
-#define IR_RANGE_1										 60050
-#define IR_RANGE_2										 80800
+#define IR_RANGE_1										 3700
+#define IR_RANGE_2										 1000
 
 int BaseMode;
 int SecondsToDelay;
@@ -591,11 +591,11 @@ task main()
 	WaitForMoveToFinish();
 
 	wait1Msec(500);
-	
+
 	Translate(1000, 30);
 	WaitForMoveToFinish();
 
-	Translate(-4000, 20);
+	Translate(-5000, 20);
 
 	while(b_TrajectoryEnabled == true)
 	{
@@ -624,23 +624,23 @@ task main()
 		}
 	}
 
-	if(abs(Position) <= IR_RANGE_1)
+	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
 	{
-		Translate(-650, 30);
+		Translate(890, 30);
 		WaitForMoveToFinish();
 	}
-	else if(abs(Position) > IR_RANGE_1 && abs(Position) < IR_RANGE_2)
+	else if(abs(Position) <= IR_RANGE_2)
 	{
 		Translate(-1300, 30);
 		WaitForMoveToFinish();
 
-		Rotate(-82, 30); //Turn Left
-		WaitForMoveToFinish();
-		
-		wait1Msec(500);
+		//Rotate(-82, 30); //Turn Left
+		//WaitForMoveToFinish();
 
-		Translate(-800, 30);
-		WaitForMoveToFinish();
+		//wait1Msec(500);
+
+		//Translate(-800, 30);
+		//WaitForMoveToFinish();
 	}
 	else //Position > IR_RANGE_2 (IR_RANGE_3)
 	{
@@ -654,27 +654,24 @@ task main()
 		WaitForMoveToFinish();*/
 	}
 
-	if(abs(Position) <= IR_RANGE_1)
-	{
+	LiftHook();
 
-		LiftHook();
+	Rotate(-55, 30);//84
+	WaitForMoveToFinish();
 
-		Rotate(-55, 30);//84
-		WaitForMoveToFinish();
+	wait1Msec(1000);
 
-		wait1Msec(1000);
+	Translate(-710, 30);
+	WaitForMoveToFinish();
 
-		Translate(-900, 30);
-		WaitForMoveToFinish();
+	Rotate(-31, 30);//84
+	WaitForMoveToFinish();
 
-		Rotate(-31, 30);//84
-		WaitForMoveToFinish();
+	wait1Msec(1000);
 
-		wait1Msec(1000);
+	Translate(4000, 70);
+	WaitForMoveToFinish();
 
-		Translate(3500, 70);
-		WaitForMoveToFinish();
-	}
 
 #if DEBUG_AUTONOMOUS_ROTATE
 	for(Index=0; Index<ARRAY_INDEX; Index++)
