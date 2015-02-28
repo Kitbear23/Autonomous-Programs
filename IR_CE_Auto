@@ -63,7 +63,7 @@
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
 #define IR_RANGE_1										 3700
-#define IR_RANGE_2										 1000
+#define IR_RANGE_2										 3150
 
 int BaseMode;
 int SecondsToDelay;
@@ -568,7 +568,7 @@ void initializeRobot()
 // At the end of the autonomous period, the FMS will autonmatically abort (stop) execution of the program.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//4900
 task main()
 {
 	initializeRobot();
@@ -582,18 +582,18 @@ task main()
 
 	wait1Msec(SecondsToDelay);
 
-	Translate(-4100, 70);
+	Translate(-4100, 50);
 	WaitForMoveToFinish();
 
 	wait1Msec(500);
 
-	Rotate(80, 70); //Turn Right
+	Rotate(80, 50); //Turn Right
 	WaitForMoveToFinish();
 
-	wait1Msec(500);
+	//wait1Msec(500);
 
-	Translate(1000, 30);
-	WaitForMoveToFinish();
+	//Translate(1000, 30);
+	//WaitForMoveToFinish();
 
 	wait1Msec(1000);
 
@@ -608,7 +608,7 @@ task main()
 
 		//wait1Msec(1000);
 
-		if(IRSensorValue == 8)//Set to 2 for Comp
+		if(IRSensorValue == 8 || IRSensorValue == 7)//Set to 2 for Comp
 		{
 			wait1Msec(500);
 			// Abort Move
@@ -628,13 +628,27 @@ task main()
 
 	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
 	{
-		Translate(910, 30);
+		Translate(700, 30);
 		WaitForMoveToFinish();
 	}
 	else if(abs(Position) <= IR_RANGE_2)
 	{
-		Translate(-3000, 30);
+
+		Translate(-500, 20);
 		WaitForMoveToFinish();
+		
+		wait1Msec(500);
+		
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
+
+		wait1Msec(500);
+		
+		Translate(-1000, 30);
+		WaitForMoveToFinish();
+		
+		//Translate(-3000, 30);
+		//WaitForMoveToFinish();
 
 		//Rotate(-82, 30); //Turn Left
 		//WaitForMoveToFinish();
@@ -655,45 +669,62 @@ task main()
 		Translate(-2600, 30);
 		WaitForMoveToFinish();
 	}
-
-	LiftHook();
-
-	Rotate(-55, 30);//84
-	WaitForMoveToFinish();
-
-	wait1Msec(1000);
-
 	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
 	{
-		Translate(-750, 30);
+
+		LiftHook();
+
+		Rotate(-55, 30);//84
 		WaitForMoveToFinish();
+
+		wait1Msec(1000);
+
+		if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
+		{
+			Translate(-990, 30);
+			WaitForMoveToFinish();
+		}
+		else if(abs(Position) <= IR_RANGE_2 || abs(Position) > IR_RANGE_1)
+		{
+			Translate(-980, 30);
+			WaitForMoveToFinish();
+		}
+
+		else if(abs(Position) > IR_RANGE_1)
+		{
+			Translate(-500, 30);
+			WaitForMoveToFinish();
+		}
+
+		Rotate(-32, 30);//84
+		WaitForMoveToFinish();
+
+		wait1Msec(1000);
+
+		if(abs(Position) > IR_RANGE_1)
+		{
+			Translate(2800, 70);
+			WaitForMoveToFinish();
+		}
+		else
+		{
+
+			Translate(3800, 70);
+			WaitForMoveToFinish();
+		}
 	}
 	else if(abs(Position) <= IR_RANGE_2)
 	{
-		Translate(-880, 30);
+		LiftHook();
+		
+		wait1Msec(500);
+		
+		Rotate(-12, 30);
 		WaitForMoveToFinish();
-	}
-
-	else if(abs(Position) > IR_RANGE_1)
-	{
-		Translate(-500, 30);
-		WaitForMoveToFinish();
-	}
-
-	Rotate(-32, 30);//84
-	WaitForMoveToFinish();
-
-	wait1Msec(1000);
-
-	if(abs(Position) > IR_RANGE_1)
-	{
-		Translate(2800, 70);
-		WaitForMoveToFinish();
-	}
-	else
-	{
-
-		Translate(3800, 70);
+		
+		wait1Msec(500);
+		
+		Translate(3000, 50);
 		WaitForMoveToFinish();
 	}
 
