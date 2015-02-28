@@ -62,8 +62,8 @@
 #define DIST_FROM_BUCKET               37
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
-#define IR_RANGE_1										 3700
-#define IR_RANGE_2										 3150
+#define IR_RANGE_1										 2450
+#define IR_RANGE_2										 2900
 
 int BaseMode;
 int SecondsToDelay;
@@ -626,12 +626,12 @@ task main()
 		}
 	}
 
-	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
+	if(abs(Position) <= IR_RANGE_1)
 	{
 		Translate(700, 30);
 		WaitForMoveToFinish();
 	}
-	else if(abs(Position) <= IR_RANGE_2)
+	else if(abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
 	{
 
 		Translate(-500, 20);
@@ -644,7 +644,7 @@ task main()
 
 		wait1Msec(500);
 		
-		Translate(-1000, 30);
+		Translate(-1200, 30);
 		WaitForMoveToFinish();
 		
 		//Translate(-3000, 30);
@@ -660,7 +660,7 @@ task main()
 	}
 	else //Position > IR_RANGE_2 (IR_RANGE_3)
 	{
-		Translate(-680, 30);
+		Translate(-580, 30);
 		WaitForMoveToFinish();
 
 		Rotate(-85, 30); //Turn Left
@@ -669,7 +669,7 @@ task main()
 		Translate(-2600, 30);
 		WaitForMoveToFinish();
 	}
-	if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
+	if(abs(Position) <= IR_RANGE_1)
 	{
 
 		LiftHook();
@@ -679,12 +679,12 @@ task main()
 
 		wait1Msec(1000);
 
-		if(abs(Position) > IR_RANGE_2 && abs(Position) <= IR_RANGE_1)
+		if(abs(Position) <= IR_RANGE_1)
 		{
 			Translate(-990, 30);
 			WaitForMoveToFinish();
 		}
-		else if(abs(Position) <= IR_RANGE_2 || abs(Position) > IR_RANGE_1)
+		/*else if(abs(Position) <= IR_RANGE_2 || abs(Position) > IR_RANGE_1)
 		{
 			Translate(-980, 30);
 			WaitForMoveToFinish();
@@ -694,7 +694,7 @@ task main()
 		{
 			Translate(-500, 30);
 			WaitForMoveToFinish();
-		}
+		}*/
 
 		Rotate(-32, 30);//84
 		WaitForMoveToFinish();
@@ -713,13 +713,13 @@ task main()
 			WaitForMoveToFinish();
 		}
 	}
-	else if(abs(Position) <= IR_RANGE_2)
+	else if(abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
 	{
 		LiftHook();
 		
 		wait1Msec(500);
 		
-		Rotate(-12, 30);
+		Rotate(-25, 30);
 		WaitForMoveToFinish();
 		
 		wait1Msec(500);
