@@ -597,7 +597,7 @@ task main()
 
 	wait1Msec(1000);
 
-	Translate(-5000, 20);
+	Translate(-5000, 15); //20
 
 	while(b_TrajectoryEnabled == true)
 	{
@@ -608,7 +608,7 @@ task main()
 
 		//wait1Msec(1000);
 
-		if(IRSensorValue == 8 || IRSensorValue == 7)//Set to 2 for Comp
+		if(IRSensorValue == 8)// || IRSensorValue == 7)//Set to 2 for Comp
 		{
 			wait1Msec(500);
 			// Abort Move
@@ -636,17 +636,17 @@ task main()
 
 		Translate(-500, 20);
 		WaitForMoveToFinish();
-		
+
 		wait1Msec(500);
-		
+
 		Rotate(-90, 30);
 		WaitForMoveToFinish();
 
 		wait1Msec(500);
-		
+
 		Translate(-1200, 30);
 		WaitForMoveToFinish();
-		
+
 		//Translate(-3000, 30);
 		//WaitForMoveToFinish();
 
@@ -658,7 +658,7 @@ task main()
 		//Translate(-800, 30);
 		//WaitForMoveToFinish();
 	}
-	else //Position > IR_RANGE_2 (IR_RANGE_3)
+	else //Position > IR_RANGE_2 (IR_RANGE_3) //4100
 	{
 		Translate(-580, 30);
 		WaitForMoveToFinish();
@@ -666,7 +666,7 @@ task main()
 		Rotate(-85, 30); //Turn Left
 		WaitForMoveToFinish();
 
-		Translate(-2600, 30);
+		Translate(-2100, 30);
 		WaitForMoveToFinish();
 	}
 	if(abs(Position) <= IR_RANGE_1)
@@ -716,15 +716,42 @@ task main()
 	else if(abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
 	{
 		LiftHook();
+
+		wait1Msec(500);
+
+		Rotate(-25, 30);
+		WaitForMoveToFinish();
+
+		wait1Msec(500);
+
+		Translate(3000, 50);
+		WaitForMoveToFinish();
+	}
+	else if(abs(Position) > 4800)
+	{
+	}
+	else if(abs(Position) > IR_RANGE_2)
+	{
+		wait1Msec(500);
+		
+		Rotate(-45, 30);
+		WaitForMoveToFinish();
+		
+		LiftHook();
 		
 		wait1Msec(500);
 		
-		Rotate(-25, 30);
+		Translate(-700, 30);
 		WaitForMoveToFinish();
 		
 		wait1Msec(500);
 		
-		Translate(3000, 50);
+		Rotate(-30, 30);
+		WaitForMoveToFinish();
+    
+		wait1Msec(500);
+		
+		Translate(1500, 50);
 		WaitForMoveToFinish();
 	}
 
