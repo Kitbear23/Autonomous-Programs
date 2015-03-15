@@ -733,24 +733,24 @@ task main()
 	else if(abs(Position) > IR_RANGE_2)
 	{
 		wait1Msec(500);
-		
+
 		Rotate(-45, 30);
 		WaitForMoveToFinish();
-		
+
 		LiftHook();
-		
+
 		wait1Msec(500);
-		
+
 		Translate(-700, 30);
 		WaitForMoveToFinish();
-		
+
 		wait1Msec(500);
-		
+
 		Rotate(-30, 30);
 		WaitForMoveToFinish();
-    
+
 		wait1Msec(500);
-		
+
 		Translate(1500, 50);
 		WaitForMoveToFinish();
 	}
