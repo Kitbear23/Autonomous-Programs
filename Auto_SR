@@ -592,9 +592,10 @@ task main()
 	startTask(TrajectoryGenerator, 90);
 
 	wait1Msec(SecondsToDelay);
-	
-	if(Path == 1)
+
+	switch (Path)
 	{
+	case 1:
 		Translate(-4100, 50);
 		WaitForMoveToFinish();
 
@@ -732,9 +733,10 @@ task main()
 			Translate(1500, 50);
 			WaitForMoveToFinish();
 		}
-	}
-	else if(Path == 2)
-	{
+
+		break;
+
+	case 2:
 		//Score in Center Goal
 
 		Translate(-4100, 50);
@@ -1002,9 +1004,11 @@ task main()
 			Translate(1500, 50);
 			WaitForMoveToFinish();
 		}
-	}
-	else if(Path == 3)
-	{
+
+		break;
+
+	case 3:
+
 		//Score in Center Goal
 
 		Translate(-4100, 50);
@@ -1127,14 +1131,16 @@ task main()
 
 			ScoreElements_Center();
 		}
-	}
-	else if(Path == 4)
-	{
+
+		break;
+
+	case 4:
 		Translate(-3000, 20);
 		WaitForMoveToFinish();
-	}
-	else if(Path == 5)
-	{
+
+		break;
+
+	case 5:	
 		Translate(-4000, 20);
 		WaitForMoveToFinish();
 
@@ -1143,9 +1149,10 @@ task main()
 		LowerGrabber();
 
 		ScoreElements_Med();
-	}
-	else if(Path == 6)
-	{
+
+		break;
+		
+	case 6:
 		Translate(-4000, 20);
 		WaitForMoveToFinish();
 
@@ -1182,9 +1189,10 @@ task main()
 
 		Rotate(-90, 30);
 		WaitForMoveToFinish();
-	}
-	else if(Path == 7) //Avoid
-	{
+		
+		break;
+		
+	case 7:
 		Translate(-3000, 20);
 		WaitForMoveToFinish();
 
@@ -1223,9 +1231,10 @@ task main()
 		LowerGrabber();
 
 		ScoreElements_Med();
-	}
-	else if(Path == 8) //Avoid
-	{
+		
+		break;
+		
+	default:
 		Translate(-3000, 20);
 		WaitForMoveToFinish();
 
@@ -1287,6 +1296,7 @@ task main()
 
 		wait1Msec(200);
 	}
+
 #if DEBUG_AUTONOMOUS_ROTATE
 	for(Index=0; Index<ARRAY_INDEX; Index++)
 	{
