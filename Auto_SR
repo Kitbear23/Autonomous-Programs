@@ -64,7 +64,7 @@
 #define LNR_FULL_MTR_PWR								1
 #define LNR_FOURTH_MTR_PWR							2
 #define IR_RANGE_1									 1500
-#define IR_RANGE_2								   2500
+#define IR_RANGE_2								   1800
 #define POSITION_1									 1000
 #define POSITION_2								   1000
 #define POSITION_3								   1000
@@ -726,7 +726,7 @@ task main()
 
 			wait1Msec(500);
 
-			Translate(-910, 30);
+			Translate(-960, 30); //910
 			WaitForMoveToFinish();
 			
 			LiftHook();
@@ -744,42 +744,46 @@ task main()
 
 			wait1Msec(200);
 
-			Translate(1000, 50);
+			Translate(1300, 40);
 			WaitForMoveToFinish();
 		}
-		/*else //Position > IR_RANGE_2 (IR_RANGE_3)
+		else //Position > IR_RANGE_2 (IR_RANGE_3)
 		{
-		Translate(-580, 30);
+		Translate(-780, 30);
 		WaitForMoveToFinish();
+		
+		wait1Msec(200);
 
-		Rotate(-78, 30); //Turn Left
+		Rotate(-79, 30); //Turn Left
 		WaitForMoveToFinish();
+		
+		wait1Msec(200);
 
 		Translate(-2100, 30);
 		WaitForMoveToFinish();
 
-		wait1Msec(500);
+		wait1Msec(200);
 
 		Rotate(-45, 30);
 		WaitForMoveToFinish();
 
-		LiftHook();
+		/*LiftHook();
 
-		wait1Msec(500);
+		wait1Msec(200);
 
 		Translate(-700, 30);
 		WaitForMoveToFinish();
 
-		wait1Msec(500);
+		wait1Msec(200);
 
 		Rotate(-30, 30);
 		WaitForMoveToFinish();
 
-		wait1Msec(500);
+		wait1Msec(200);
 
-		Translate(1500, 50);
-		WaitForMoveToFinish();
-		}*/
+		Translate(1500, 40);
+		WaitForMoveToFinish();*/
+		}
 
 		break;
 
