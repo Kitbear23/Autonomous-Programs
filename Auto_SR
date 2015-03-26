@@ -648,7 +648,7 @@ task main()
 				// before reading position.
 				wait1Msec(1000);
 
-				Position = nMotorEncoder(RightMotor); //check left encoder for pos 1 & 2        
+				Position = nMotorEncoder(RightMotor); //check left encoder for pos 1 & 2
 			}
 			else
 				{
@@ -656,7 +656,7 @@ task main()
 				Position = nMotorEncoder(RightMotor);
 			}
 		}
-		
+
 		if(abs(Position) > 2600)
 		{
 			//Do nothing
@@ -666,7 +666,7 @@ task main()
 			if(abs(Position) > 1100)
 			{
 				if(abs(Position) < 1200)
-				{					
+				{
 					Translate(800, 30);
 					WaitForMoveToFinish();
 				}
@@ -697,9 +697,9 @@ task main()
 			WaitForMoveToFinish();
 
 			wait1Msec(500);
-			
+
 			LiftHook();
-			
+
 			wait1Msec(500);
 
 			Translate(-1225, 30);
@@ -728,14 +728,14 @@ task main()
 
 			Translate(-960, 30); //910
 			WaitForMoveToFinish();
-			
+
 			LiftHook();
-			
+
 			Rotate(-35, 30);//84
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
-			
+
 			Translate(-500, 30); //600
 			WaitForMoveToFinish();
 
@@ -751,38 +751,38 @@ task main()
 		{
 		Translate(-780, 30);
 		WaitForMoveToFinish();
-		
+
 		wait1Msec(200);
 
 		Rotate(-79, 30); //Turn Left
 		WaitForMoveToFinish();
-		
+
 		wait1Msec(200);
 
-		Translate(-2100, 30);
+		Translate(-1575, 30);
 		WaitForMoveToFinish();
 
 		wait1Msec(200);
 
-		Rotate(-45, 30);
+		Rotate(-55, 30);
 		WaitForMoveToFinish();
 
-		/*LiftHook();
+		LiftHook();
 
 		wait1Msec(200);
 
-		Translate(-700, 30);
+		Translate(-900, 30);
 		WaitForMoveToFinish();
 
 		wait1Msec(200);
 
-		Rotate(-30, 30);
+		Rotate(-25, 30);
 		WaitForMoveToFinish();
 
 		wait1Msec(200);
 
 		Translate(1500, 40);
-		WaitForMoveToFinish();*/
+		WaitForMoveToFinish();
 		}
 
 		break;
