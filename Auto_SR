@@ -41,13 +41,13 @@
 #define MIN_MOTOR_POWER_TRANSLATE      10//20
 #define WAY_POINT_1                  9500 //8000 //in encoder counts
 #define CHANGE_IN_MTR_PWR               5
-#define T_CHANGE_IN_TIME               10 //30 //In Miliseconds
+#define T_CHANGE_IN_TIME               30 //30 //In Miliseconds
 #define R_CHANGE_IN_TIME               10 //In Miliseconds
 #define R_BRAKING_RANGE                 1
 #define T_BRAKING_RANGE                 5
 #define BRAKE_MTR_PWR                 -20 //-60
 #define BRAKE_TIME                     60
-#define ARRAY_INDEX                    50
+#define ARRAY_INDEX                   500
 #define ROTATE                          0
 #define TRANSLATE                       1
 #define ACCEL_STATE                     1
@@ -57,21 +57,20 @@
 #define BRAKE_STATE                     5
 #define AT_TARGET_STATE                 6
 #define IDLE_STATE                      7
-#define T_DECEL_RANGE_FACTOR          500
+#define T_DECEL_RANGE_FACTOR          200 //500
 #define R_DECEL_RANGE_FACTOR           10
 #define CM_ENCD_COUNTS                 63
 #define DIST_FROM_BUCKET               37
-#define LNR_FULL_MTR_PWR                1
-#define LNR_FOURTH_MTR_PWR              2
-#define IR_RANGE_1                   1870
-#define IR_RANGE_2                   2500
-#define IR_RANGE_3                   2600
-#define POSITION_1                   1000
-#define POSITION_2                   1000
-#define POSITION_3                   1000
-#define MAX_LIFTER_VALUE             6600
-#define MIN_LIFTER_VALUE               95
-#define TRANSLATE_MTR_INCREMENT         5
+#define LNR_FULL_MTR_PWR								1
+#define LNR_FOURTH_MTR_PWR							2
+#define IR_RANGE_1									 1400
+#define IR_RANGE_2								   1800
+#define POSITION_1									 1000
+#define POSITION_2								   1000
+#define POSITION_3								   1000
+#define MAX_LIFTER_VALUE						 6600
+#define MIN_LIFTER_VALUE					     95
+#define TRANSLATE_MTR_INCREMENT					2
 
 int BaseMode;
 int SecondsToDelay;
@@ -80,464 +79,468 @@ int nButtonPresses = 0;
 //byte Position;
 //byte SelectedPosition;
 //int SelectedPath;
-int     Position = 0;
-float   CurrentSample = 0;
-float   PreviousSample = 0;
-byte    MaxMotorPower = 0;
-float   TargetAngle = 0;
-int     TargetPosition = 0;
-bool    b_TrajectoryEnabled;
-int     TrajectoryMode;
-int     TrajectoryState;
-float   GyroRotation = 0;
-int     IRSensorValue;
-float   DegreesThisSample = 0;
-float   MeasuredAngle = 0;
-int     i = 0;
-float   Offset = 0;
+int Position = 0;
+float CurrentSample = 0;
+float PreviousSample = 0;
+byte MaxMotorPower = 0;
+float TargetAngle = 0;
+int TargetPosition = 0;
+bool b_TrajectoryEnabled;
+int TrajectoryMode;
+int TrajectoryState;
+float GyroRotation = 0;
+int IRSensorValue;
+float DegreesThisSample = 0;
+float MeasuredAngle = 0;
+int i = 0;
+float Offset = 0;
 #if DEBUG_AUTONOMOUS_ROTATE
-int     R_MtrPwrArray[ARRAY_INDEX];
-float   AngleArray[ARRAY_INDEX];
-float   RotationRateArray[ARRAY_INDEX];
-int     Index = 0;
+int R_MtrPwrArray[ARRAY_INDEX];
+float AngleArray[ARRAY_INDEX];
+float RotationRateArray[ARRAY_INDEX];
+int Index = 0;
 #endif
 #if DEBUG_AUTONOMOUS_TRANSLATE
-int     T_MtrPwrArray[ARRAY_INDEX];
-int     TrajectoryStateArray[ARRAY_INDEX];
-int     DTTPArray[ARRAY_INDEX];
-int     EncoderCountsArray[ARRAY_INDEX];
-int     T_Index = 0;
+int T_MtrPwrArray[ARRAY_INDEX];
+int TrajectoryStateArray[ARRAY_INDEX];
+int DTTPArray[ARRAY_INDEX];
+int EncoderCountsArray[ARRAY_INDEX];
+int T_Index = 0;
 #endif
 #if DEBUG_CALC_ANGLE
-float   DebugArray[ARRAY_INDEX];
-float   DebugArray2[ARRAY_INDEX];
-int     DebugArray3[ARRAY_INDEX];
-int     Index = 0;
+float DebugArray[ARRAY_INDEX];
+float DebugArray2[ARRAY_INDEX];
+int DebugArray3[ARRAY_INDEX];
+int Index = 0;
 #endif
-int     DirFactor;
-int     LeftMotorValue;
-int     Encoder_Array[ARRAY_INDEX];
-int     IR_Array[ARRAY_INDEX];
-int     IR_Index = 0;
+int DirFactor;
+int LeftMotorValue;
+int Encoder_Array[ARRAY_INDEX];
+int IR_Array[ARRAY_INDEX];
+int IR_Index = 0;
 
-void    ChooseDelay();
-void    ChoosePath();
-void    CalibrateGyro();
-void    ResetGyro();
-void    ResetEncoders();
-int     GetEncoderPosition();
-void    Rotate(long SetTargetAngle, byte SetMaxMotorPower);
-void    Translate(int SetTargetPosition, byte SetMaxMotorPower);
-void    WaitForMoveToFinish();
-void    LiftHook();
-void    LowerGrabber();
-void    ScoreElements_Center();
-void    ScoreElements_Med();
+void TranslateAbort();
+void ChooseDelay();
+void ChoosePath();
+void CalibrateGyro();
+void ResetGyro();
+void ResetEncoders();
+int GetEncoderPosition();
+void Rotate(long SetTargetAngle, byte SetMaxMotorPower);
+void Translate(int SetTargetPosition, byte SetMaxMotorPower);
+void WaitForMoveToFinish();
+void LiftHook();
+void LowerGrabber();
+void ScoreElements_Center();
+void ScoreElements_Med();
 
 task CalculateAngle()
 {
-    while (true)
-    {
-        GyroRotation = SensorValue(GyroSensor);
-        CurrentSample = GyroRotation - Offset;
-        DegreesThisSample = (CurrentSample + PreviousSample) / 2 * ((float)SAMPLE_PERIOD_MSEC / 1000);
-        MeasuredAngle = MeasuredAngle + DegreesThisSample;
-        PreviousSample = CurrentSample;
+	while (true)
+	{
+		GyroRotation = SensorValue(GyroSensor);
+		CurrentSample = GyroRotation - Offset;
+		DegreesThisSample = (CurrentSample + PreviousSample)/2 * ((float)SAMPLE_PERIOD_MSEC/1000);
+		MeasuredAngle = MeasuredAngle + DegreesThisSample;
+		PreviousSample = CurrentSample;
 #if DEBUG_CALC_ANGLE
-        if (Index < ARRAY_INDEX)
-        {
-            DebugArray[Index] = CurrentSample;
-            DebugArray2[Index] = MeasuredAngle;
-            DebugArray3[Index] = time1[T1];
-            Index++;
-        }
+		if(Index < ARRAY_INDEX)
+		{
+			DebugArray[Index] = CurrentSample;
+			DebugArray2[Index] = MeasuredAngle;
+			DebugArray3[Index] = time1[T1];
+			Index++;
+		}
 #endif
-        wait1Msec(SAMPLE_PERIOD_MSEC);
-    }
+		wait1Msec(SAMPLE_PERIOD_MSEC);
+	}
 }
 
 task TrajectoryGenerator()
 {
-    int i;
-    float DistanceToTargetAngle = 0;
-    int DistanceToTargetPosition = 0;
-    float RotateDecelRange;
-    int TranslateDecelRange;
+	int i;
+	float DistanceToTargetAngle = 0;
+	int DistanceToTargetPosition = 0;
+	float RotateDecelRange;
+	int TranslateDecelRange;
 
-    while (true)
-    {
+	while(true)
+	{
 #if DEBUG_AUTONOMOUS_ROTATE
-        while (Index < 20)
-        {
-            if (Index < ARRAY_INDEX)
-            {
-                R_MtrPwrArray[Index] = motor[RightMotor];
-                AngleArray[Index] = MeasuredAngle;
-                RotationRateArray[Index] = CurrentSample;
-                Index++;
-            }
-        }
+		while(Index < 20)
+		{
+			if(Index < ARRAY_INDEX)
+			{
+				R_MtrPwrArray[Index] = motor[RightMotor];
+				AngleArray[Index] = MeasuredAngle;
+				RotationRateArray[Index] = CurrentSample;
+				Index++;
+			}
+		}
 #endif
-        if (b_TrajectoryEnabled == true && TrajectoryMode == TRANSLATE)
-        {
-            ///////////////////////////////////////////////
-            //             AccelerateMode                //
-            ///////////////////////////////////////////////
-            TrajectoryState = ACCEL_STATE;
-            motor[RightMotor] = MIN_MOTOR_POWER_TRANSLATE * DirFactor;
-            motor[LeftMotor] = motor[RightMotor];
+
+		if(b_TrajectoryEnabled == true && TrajectoryMode == TRANSLATE)
+		{
+			///////////////////////////////////////////////
+			//             AccelerateMode                //
+			///////////////////////////////////////////////
+			TrajectoryState = ACCEL_STATE;
+			motor[RightMotor] = MIN_MOTOR_POWER_TRANSLATE*DirFactor;
+			motor[LeftMotor] = motor[RightMotor];
 
 #if DEBUG_AUTONOMOUS_TRANSLATE
-            if (T_Index < ARRAY_INDEX)
-            {
-                T_MtrPwrArray[T_Index] = motor[RightMotor];
-                TrajectoryStateArray[T_Index] = TrajectoryState;
-                DTTPArray[T_Index] = DistanceToTargetPosition;
-                EncoderCountsArray[T_Index] = GetEncoderPosition();
-                T_Index++;
-            }
+			if(T_Index < ARRAY_INDEX)
+			{
+				T_MtrPwrArray[T_Index] = motor[RightMotor];
+				TrajectoryStateArray[T_Index] = TrajectoryState;
+				DTTPArray[T_Index] = DistanceToTargetPosition;
+				EncoderCountsArray[T_Index] = GetEncoderPosition();
+				T_Index++;
+			}
 #endif
-            DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+			DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
 
-            for (i = MIN_MOTOR_POWER_TRANSLATE;
-                 i <= (MaxMotorPower - CHANGE_IN_MTR_PWR)
-                 && ((DistanceToTargetPosition * DirFactor) > ((TargetPosition / 2) * DirFactor))
-                 && (b_TrajectoryEnabled == true);
-                 i = i + CHANGE_IN_MTR_PWR)
-            {
-                motor[RightMotor] = i * DirFactor;
-                motor[LeftMotor] = motor[RightMotor];
-                wait1Msec(T_CHANGE_IN_TIME);
-                DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+			for(i=MIN_MOTOR_POWER_TRANSLATE;
+			i <= (MaxMotorPower - CHANGE_IN_MTR_PWR)
+			&& ((DistanceToTargetPosition*DirFactor) > ((TargetPosition/2)*DirFactor))
+			&& (b_TrajectoryEnabled == true);
+			i = i + CHANGE_IN_MTR_PWR)
+			{
+				motor[RightMotor] = i*DirFactor;
+				motor[LeftMotor] = motor[RightMotor];
+				wait1Msec(T_CHANGE_IN_TIME);
+				DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+#if DEBUG_AUTONOMOUS_TRANSLATE
+				if(T_Index < ARRAY_INDEX)
+				{
+					T_MtrPwrArray[T_Index] = motor[RightMotor];
+					TrajectoryStateArray[T_Index] = TrajectoryState;
+					DTTPArray[T_Index] = DistanceToTargetPosition;
+					EncoderCountsArray[T_Index] = GetEncoderPosition();
+					T_Index++;
+				}
+#endif
+			}
+
+			TranslateDecelRange = GetEncoderPosition() + (DirFactor*T_DECEL_RANGE_FACTOR);
+
+			///////////////////////////////////////////////
+			//  Constant Motor Power After Acceleration  //
+			///////////////////////////////////////////////
+			TrajectoryState = A_CONST_MTR_PWR_STATE;
+
+			while((DistanceToTargetPosition*DirFactor) > (TranslateDecelRange*DirFactor)
+				&& (b_TrajectoryEnabled == true))
+			{
+				motor[RightMotor] = i*DirFactor;
+				if(nMotorEncoder(LeftMotor) < nMotorEncoder(RightMotor))
+				{
+					motor[LeftMotor] = motor[RightMotor] + TRANSLATE_MTR_INCREMENT;
+					LeftMotorValue = motor[LeftMotor];
+				}
+				else if(nMotorEncoder(LeftMotor) > nMotorEncoder(RightMotor))
+				{
+					motor[LeftMotor] = motor[RightMotor] - TRANSLATE_MTR_INCREMENT;
+					LeftMotorValue = motor[LeftMotor];
+				}
+				else
+				{
+					motor[LeftMotor] = motor[RightMotor];
+					LeftMotorValue = motor[LeftMotor];
+				}
+				wait1Msec(T_CHANGE_IN_TIME);
+				DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+#if DEBUG_AUTONOMOUS_TRANSLATE
+				if(T_Index < ARRAY_INDEX)
+				{
+					T_MtrPwrArray[T_Index] = motor[RightMotor];
+					TrajectoryStateArray[T_Index] = TrajectoryState;
+					DTTPArray[T_Index] = DistanceToTargetPosition;
+					EncoderCountsArray[T_Index] = GetEncoderPosition();
+					T_Index++;
+				}
+#endif
+			}
+
+			///////////////////////////////////////////////
+			//             Decelerate                    //
+			///////////////////////////////////////////////
+			TrajectoryState = DECEL_STATE;
+
+			for(;
+			(i > MIN_MOTOR_POWER_TRANSLATE) && ((DistanceToTargetPosition*DirFactor) > T_BRAKING_RANGE)
+			&& (b_TrajectoryEnabled == true);
+			i = i - CHANGE_IN_MTR_PWR
+			)
+			{
+				motor[RightMotor] = i*DirFactor;
+				motor[LeftMotor] = motor[RightMotor];
+				wait1Msec(T_CHANGE_IN_TIME);
+				DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+#if DEBUG_AUTONOMOUS_TRANSLATE
+				if(T_Index < ARRAY_INDEX)
+				{
+					T_MtrPwrArray[T_Index] = motor[RightMotor];
+					TrajectoryStateArray[T_Index] = TrajectoryState;
+					DTTPArray[T_Index] = DistanceToTargetPosition;
+					EncoderCountsArray[T_Index] = GetEncoderPosition();
+					T_Index++;
+				}
+#endif
+			}
+
+			///////////////////////////////////////////////
+			//  Constant Motor Power After Deceleration  //
+			///////////////////////////////////////////////
+			TrajectoryState = D_CONST_MTR_PWR_STATE;
+
+			while(((DistanceToTargetPosition*DirFactor) > T_BRAKING_RANGE)
+				&& (b_TrajectoryEnabled == true))
+			{
+				wait1Msec(T_CHANGE_IN_TIME);
+				DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+#if DEBUG_AUTONOMOUS_TRANSLATE
+				if(T_Index < ARRAY_INDEX)
+				{
+					T_MtrPwrArray[T_Index] = motor[RightMotor];
+					TrajectoryStateArray[T_Index] = TrajectoryState;
+					DTTPArray[T_Index] = DistanceToTargetPosition;
+					EncoderCountsArray[T_Index] = GetEncoderPosition();
+					T_Index++;
+				}
+#endif
+			}
+
+			///////////////////////////////////////////////
+			//                   Brake                   //
+			///////////////////////////////////////////////
+			TrajectoryState = BRAKE_STATE;
+
+			motor[RightMotor] = BRAKE_MTR_PWR*DirFactor;
+			motor[LeftMotor] = motor[RightMotor];
+			wait1Msec(BRAKE_TIME);
+			DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
+#if DEBUG_AUTONOMOUS_TRANSLATE
+			if(T_Index < ARRAY_INDEX)
+			{
+				T_MtrPwrArray[T_Index] = motor[RightMotor];
+				TrajectoryStateArray[T_Index] = TrajectoryState;
+				DTTPArray[T_Index] = DistanceToTargetPosition;
+				EncoderCountsArray[T_Index] = GetEncoderPosition();
+				T_Index++;
+			}
+#endif
+
+			///////////////////////////////////////////////
+			//              At Target Position           //
+			///////////////////////////////////////////////
+			TrajectoryState = AT_TARGET_STATE;
+
+			motor[RightMotor] = 0;
+			motor[LeftMotor] = 0;
+
+			b_TrajectoryEnabled = false;
 
 #if DEBUG_AUTONOMOUS_TRANSLATE
-                if (T_Index < ARRAY_INDEX)
-                {
-                    T_MtrPwrArray[T_Index] = motor[RightMotor];
-                    TrajectoryStateArray[T_Index] = TrajectoryState;
-                    DTTPArray[T_Index] = DistanceToTargetPosition;
-                    EncoderCountsArray[T_Index] = GetEncoderPosition();
-                    T_Index++;
-                }
+			if(T_Index < ARRAY_INDEX)
+			{
+				T_MtrPwrArray[T_Index] = motor[RightMotor];
+				TrajectoryStateArray[T_Index] = TrajectoryState;
+				DTTPArray[T_Index] = DistanceToTargetPosition;
+				EncoderCountsArray[T_Index] = GetEncoderPosition();
+				T_Index++;
+			}
 #endif
-            }
+		}
 
-            TranslateDecelRange = GetEncoderPosition() + (DirFactor * T_DECEL_RANGE_FACTOR);
+		else if(b_TrajectoryEnabled == true && TrajectoryMode == ROTATE)
+		{
+			motor[LeftMotor] = MIN_MOTOR_POWER_ROTATE*DirFactor;
+			motor[RightMotor] = -motor[LeftMotor];
 
-            ///////////////////////////////////////////////
-            //  Constant Motor Power After Acceleration  //
-            ///////////////////////////////////////////////
-            TrajectoryState = A_CONST_MTR_PWR_STATE;
-
-            while ((DistanceToTargetPosition * DirFactor) > (TranslateDecelRange * DirFactor)
-                   && (b_TrajectoryEnabled == true))
-            {
-                motor[RightMotor] = i * DirFactor;
-                if (nMotorEncoder(LeftMotor) < nMotorEncoder(RightMotor))
-                {
-                    motor[LeftMotor] = motor[RightMotor] + TRANSLATE_MTR_INCREMENT;
-                    LeftMotorValue = motor[LeftMotor];
-                } else if (nMotorEncoder(LeftMotor) > nMotorEncoder(RightMotor))
-                {
-                    motor[LeftMotor] = motor[RightMotor] - TRANSLATE_MTR_INCREMENT;
-                    LeftMotorValue = motor[LeftMotor];
-                } else
-                {
-                    motor[LeftMotor] = motor[RightMotor];
-                    LeftMotorValue = motor[LeftMotor];
-                }
-                wait1Msec(T_CHANGE_IN_TIME);
-                DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
-#if DEBUG_AUTONOMOUS_TRANSLATE
-                if (T_Index < ARRAY_INDEX)
-                {
-                    T_MtrPwrArray[T_Index] = motor[RightMotor];
-                    TrajectoryStateArray[T_Index] = TrajectoryState;
-                    DTTPArray[T_Index] = DistanceToTargetPosition;
-                    EncoderCountsArray[T_Index] = GetEncoderPosition();
-                    T_Index++;
-                }
-#endif
-            }
-
-            ///////////////////////////////////////////////
-            //             Decelerate                    //
-            ///////////////////////////////////////////////
-            TrajectoryState = DECEL_STATE;
-
-            for (;
-                 (i > MIN_MOTOR_POWER_TRANSLATE) && ((DistanceToTargetPosition * DirFactor) > T_BRAKING_RANGE)
-                 && (b_TrajectoryEnabled == true);
-                 i = i - CHANGE_IN_MTR_PWR
-                 )
-            {
-                motor[RightMotor] = i * DirFactor;
-                motor[LeftMotor] = motor[RightMotor];
-                wait1Msec(T_CHANGE_IN_TIME);
-                DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
-#if DEBUG_AUTONOMOUS_TRANSLATE
-                if (T_Index < ARRAY_INDEX)
-                {
-                    T_MtrPwrArray[T_Index] = motor[RightMotor];
-                    TrajectoryStateArray[T_Index] = TrajectoryState;
-                    DTTPArray[T_Index] = DistanceToTargetPosition;
-                    EncoderCountsArray[T_Index] = GetEncoderPosition();
-                    T_Index++;
-                }
-#endif
-            }
-
-            ///////////////////////////////////////////////
-            //  Constant Motor Power After Deceleration  //
-            ///////////////////////////////////////////////
-            TrajectoryState = D_CONST_MTR_PWR_STATE;
-
-            while (((DistanceToTargetPosition * DirFactor) > T_BRAKING_RANGE)
-                   && (b_TrajectoryEnabled == true))
-            {
-                wait1Msec(T_CHANGE_IN_TIME);
-                DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
-#if DEBUG_AUTONOMOUS_TRANSLATE
-                if (T_Index < ARRAY_INDEX)
-                {
-                    T_MtrPwrArray[T_Index] = motor[RightMotor];
-                    TrajectoryStateArray[T_Index] = TrajectoryState;
-                    DTTPArray[T_Index] = DistanceToTargetPosition;
-                    EncoderCountsArray[T_Index] = GetEncoderPosition();
-                    T_Index++;
-                }
-#endif
-            }
-
-            ///////////////////////////////////////////////
-            //                   Brake                   //
-            ///////////////////////////////////////////////
-            TrajectoryState = BRAKE_STATE;
-
-            motor[RightMotor] = BRAKE_MTR_PWR * DirFactor;
-            motor[LeftMotor] = motor[RightMotor];
-            wait1Msec(BRAKE_TIME);
-            DistanceToTargetPosition = TargetPosition - GetEncoderPosition();
-#if DEBUG_AUTONOMOUS_TRANSLATE
-            if (T_Index < ARRAY_INDEX)
-            {
-                T_MtrPwrArray[T_Index] = motor[RightMotor];
-                TrajectoryStateArray[T_Index] = TrajectoryState;
-                DTTPArray[T_Index] = DistanceToTargetPosition;
-                EncoderCountsArray[T_Index] = GetEncoderPosition();
-                T_Index++;
-            }
-#endif
-
-            ///////////////////////////////////////////////
-            //              At Target Position           //
-            ///////////////////////////////////////////////
-            TrajectoryState = AT_TARGET_STATE;
-
-            motor[RightMotor] = 0;
-            motor[LeftMotor] = 0;
-
-            b_TrajectoryEnabled = false;
-
-#if DEBUG_AUTONOMOUS_TRANSLATE
-            if (T_Index < ARRAY_INDEX)
-            {
-                T_MtrPwrArray[T_Index] = motor[RightMotor];
-                TrajectoryStateArray[T_Index] = TrajectoryState;
-                DTTPArray[T_Index] = DistanceToTargetPosition;
-                EncoderCountsArray[T_Index] = GetEncoderPosition();
-                T_Index++;
-            }
-#endif
-        }
-        else if (b_TrajectoryEnabled == true && TrajectoryMode == ROTATE)
-        {
-            motor[LeftMotor] = MIN_MOTOR_POWER_ROTATE * DirFactor;
-            motor[RightMotor] = -motor[LeftMotor];
-
-            clearTimer(T1);
+			clearTimer(T1);
 
 #if DEBUG_AUTONOMOUS_ROTATE
-            if (Index < ARRAY_INDEX)
-            {
-                R_MtrPwrArray[Index] = motor[RightMotor];
-                AngleArray[Index] = MeasuredAngle;
-                RotationRateArray[Index] = CurrentSample;
-                Index++;
-            }
+			if(Index < ARRAY_INDEX)
+			{
+				R_MtrPwrArray[Index] = motor[RightMotor];
+				AngleArray[Index] = MeasuredAngle;
+				RotationRateArray[Index] = CurrentSample;
+				Index++;
+			}
 #endif
-            DistanceToTargetAngle = TargetAngle - MeasuredAngle;
+			DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 
-            ///////////////////////////////////////////////
-            //             Accelerate                    //
-            ///////////////////////////////////////////////
-            TrajectoryState = ACCEL_STATE;
+			///////////////////////////////////////////////
+			//             Accelerate                    //
+			///////////////////////////////////////////////
+			TrajectoryState = ACCEL_STATE;
 
-            for (i = MIN_MOTOR_POWER_ROTATE;
-                 i <= (MaxMotorPower - CHANGE_IN_MTR_PWR)
-                 && ((DistanceToTargetAngle * DirFactor) > (TargetAngle / 2 * DirFactor))
-                 && (b_TrajectoryEnabled == true);
-                 i = i + CHANGE_IN_MTR_PWR)
-            {
-                motor[LeftMotor] = i * DirFactor;
-                motor[RightMotor] = -motor[LeftMotor];
-                wait1Msec(R_CHANGE_IN_TIME);
-                DistanceToTargetAngle = TargetAngle - MeasuredAngle;
+			for(i=MIN_MOTOR_POWER_ROTATE;
+			i <= (MaxMotorPower - CHANGE_IN_MTR_PWR)
+			&& ((DistanceToTargetAngle*DirFactor) > (TargetAngle/2*DirFactor))
+			&& (b_TrajectoryEnabled == true);
+			i = i + CHANGE_IN_MTR_PWR)
+			{
+				motor[LeftMotor] = i*DirFactor;
+				motor[RightMotor] = -motor[LeftMotor];
+				wait1Msec(R_CHANGE_IN_TIME);
+				DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 
 #if DEBUG_AUTONOMOUS_ROTATE
-                if (Index < ARRAY_INDEX)
-                {
-                    R_MtrPwrArray[Index] = motor[RightMotor];
-                    AngleArray[Index] = MeasuredAngle;
-                    RotationRateArray[Index] = CurrentSample;
-                    Index++;
-                }
+				if(Index < ARRAY_INDEX)
+				{
+					R_MtrPwrArray[Index] = motor[RightMotor];
+					AngleArray[Index] = MeasuredAngle;
+					RotationRateArray[Index] = CurrentSample;
+					Index++;
+				}
 #endif
-            }
+			}
 
-            RotateDecelRange = MeasuredAngle + (DirFactor * R_DECEL_RANGE_FACTOR);
+			RotateDecelRange = MeasuredAngle + (DirFactor*R_DECEL_RANGE_FACTOR);
 
-            ///////////////////////////////////////////////
-            //  Constant Motor Power After Acceleration  //
-            ///////////////////////////////////////////////
-            TrajectoryState = A_CONST_MTR_PWR_STATE;
+			///////////////////////////////////////////////
+			//  Constant Motor Power After Acceleration  //
+			///////////////////////////////////////////////
+			TrajectoryState = A_CONST_MTR_PWR_STATE;
 
-            while ((DistanceToTargetAngle * DirFactor) > (RotateDecelRange * DirFactor)
-                   && (b_TrajectoryEnabled == true))
-            {
-                motor[LeftMotor] = i * DirFactor;
-                motor[RightMotor] = -motor[LeftMotor];
-                wait1Msec(R_CHANGE_IN_TIME);
-                DistanceToTargetAngle = TargetAngle - MeasuredAngle;
+			while((DistanceToTargetAngle*DirFactor) > (RotateDecelRange*DirFactor)
+				&& (b_TrajectoryEnabled == true))
+			{
+				motor[LeftMotor] = i*DirFactor;
+				motor[RightMotor] = -motor[LeftMotor];
+				wait1Msec(R_CHANGE_IN_TIME);
+				DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 #if DEBUG_AUTONOMOUS_ROTATE
-                if (Index < ARRAY_INDEX)
-                {
-                    R_MtrPwrArray[Index] = motor[RightMotor];
-                    AngleArray[Index] = MeasuredAngle;
-                    RotationRateArray[Index] = CurrentSample;
-                    Index++;
-                }
+				if(Index < ARRAY_INDEX)
+				{
+					R_MtrPwrArray[Index] = motor[RightMotor];
+					AngleArray[Index] = MeasuredAngle;
+					RotationRateArray[Index] = CurrentSample;
+					Index++;
+				}
 #endif
-            }
+			}
 
-            ///////////////////////////////////////////////
-            //             Decelerate                    //
-            ///////////////////////////////////////////////
-            TrajectoryState = DECEL_STATE;
+			///////////////////////////////////////////////
+			//             Decelerate                    //
+			///////////////////////////////////////////////
+			TrajectoryState = DECEL_STATE;
 
-            for (;
-                 (i > MIN_MOTOR_POWER_ROTATE)
-                 && ((DistanceToTargetAngle * DirFactor) > R_BRAKING_RANGE)
-                 && (b_TrajectoryEnabled == true);
-                 i = i - CHANGE_IN_MTR_PWR)
-            {
-                motor[LeftMotor] = i * DirFactor;
-                motor[RightMotor] = -motor[LeftMotor];
-                wait1Msec(R_CHANGE_IN_TIME);
+			for(;
+			(i > MIN_MOTOR_POWER_ROTATE)
+			&& ((DistanceToTargetAngle*DirFactor) > R_BRAKING_RANGE)
+			&& (b_TrajectoryEnabled == true);
+			i = i - CHANGE_IN_MTR_PWR)
+			{
+				motor[LeftMotor] = i*DirFactor;
+				motor[RightMotor] = -motor[LeftMotor];
+				wait1Msec(R_CHANGE_IN_TIME);
 
-                DistanceToTargetAngle = TargetAngle - MeasuredAngle;
-
-#if DEBUG_AUTONOMOUS_ROTATE
-                if (Index < ARRAY_INDEX)
-                {
-                    R_MtrPwrArray[Index] = motor[RightMotor];
-                    AngleArray[Index] = MeasuredAngle;
-                    RotationRateArray[Index] = CurrentSample;
-                    Index++;
-                }
-#endif
-            }
-
-            ///////////////////////////////////////////////
-            //  Constant Motor Power After Deceleration  //
-            ///////////////////////////////////////////////
-            TrajectoryState = D_CONST_MTR_PWR_STATE;
-
-            while ((DistanceToTargetAngle * DirFactor) > R_BRAKING_RANGE
-                   && (b_TrajectoryEnabled == true))
-            {
-                wait1Msec(R_CHANGE_IN_TIME);
-
-                DistanceToTargetAngle = TargetAngle - MeasuredAngle;
+				DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 
 #if DEBUG_AUTONOMOUS_ROTATE
-                if (Index < ARRAY_INDEX)
-                {
-                    R_MtrPwrArray[Index] = motor[RightMotor];
-                    AngleArray[Index] = MeasuredAngle;
-                    RotationRateArray[Index] = CurrentSample;
-                    Index++;
-                }
+				if(Index < ARRAY_INDEX)
+				{
+					R_MtrPwrArray[Index] = motor[RightMotor];
+					AngleArray[Index] = MeasuredAngle;
+					RotationRateArray[Index] = CurrentSample;
+					Index++;
+				}
 #endif
-            }
+			}
 
-            ///////////////////////////////////////////////
-            //                   Brake                   //
-            ///////////////////////////////////////////////
-            TrajectoryState = BRAKE_STATE;
+			///////////////////////////////////////////////
+			//  Constant Motor Power After Deceleration  //
+			///////////////////////////////////////////////
+			TrajectoryState = D_CONST_MTR_PWR_STATE;
 
-            motor[LeftMotor] = BRAKE_MTR_PWR * DirFactor;
-            motor[RightMotor] = -motor[LeftMotor];
-            wait1Msec(BRAKE_TIME);
+			while((DistanceToTargetAngle*DirFactor) > R_BRAKING_RANGE
+				&& (b_TrajectoryEnabled == true))
+			{
+				wait1Msec(R_CHANGE_IN_TIME);
 
-            DistanceToTargetAngle = TargetAngle - MeasuredAngle;
+				DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 
 #if DEBUG_AUTONOMOUS_ROTATE
-            if (Index < ARRAY_INDEX)
-            {
-                R_MtrPwrArray[Index] = motor[RightMotor];
-                AngleArray[Index] = MeasuredAngle;
-                RotationRateArray[Index] = CurrentSample;
-                Index++;
-            }
+				if(Index < ARRAY_INDEX)
+				{
+					R_MtrPwrArray[Index] = motor[RightMotor];
+					AngleArray[Index] = MeasuredAngle;
+					RotationRateArray[Index] = CurrentSample;
+					Index++;
+				}
 #endif
+			}
 
-            ///////////////////////////////////////////////
-            //              At Target Position           //
-            ///////////////////////////////////////////////
-            TrajectoryState = AT_TARGET_STATE;
+			///////////////////////////////////////////////
+			//                   Brake                   //
+			///////////////////////////////////////////////
+			TrajectoryState = BRAKE_STATE;
 
-            motor[RightMotor] = 0;
-            motor[LeftMotor] = 0;
+			motor[LeftMotor] = BRAKE_MTR_PWR*DirFactor;
+			motor[RightMotor] = -motor[LeftMotor];
+			wait1Msec(BRAKE_TIME);
 
-            b_TrajectoryEnabled = false;
+			DistanceToTargetAngle = TargetAngle - MeasuredAngle;
 
 #if DEBUG_AUTONOMOUS_ROTATE
-            if (Index < ARRAY_INDEX)
-            {
-                R_MtrPwrArray[Index] = motor[RightMotor];
-                AngleArray[Index] = MeasuredAngle;
-                RotationRateArray[Index] = CurrentSample;
-                Index++;
-            }
+			if(Index < ARRAY_INDEX)
+			{
+				R_MtrPwrArray[Index] = motor[RightMotor];
+				AngleArray[Index] = MeasuredAngle;
+				RotationRateArray[Index] = CurrentSample;
+				Index++;
+			}
 #endif
-        }
-        else //b_TrajectoryEnabled == false
-        {
-            TrajectoryState = IDLE_STATE;
+
+			///////////////////////////////////////////////
+			//              At Target Position           //
+			///////////////////////////////////////////////
+			TrajectoryState = AT_TARGET_STATE;
+
+			motor[RightMotor] = 0;
+			motor[LeftMotor] = 0;
+
+			b_TrajectoryEnabled = false;
 
 #if DEBUG_AUTONOMOUS_ROTATE
-            if (Index < ARRAY_INDEX)
-            {
-                R_MtrPwrArray[Index] = motor[RightMotor];
-                AngleArray[Index] = MeasuredAngle;
-                RotationRateArray[Index] = CurrentSample;
-                Index++;
-            }
+			if(Index < ARRAY_INDEX)
+			{
+				R_MtrPwrArray[Index] = motor[RightMotor];
+				AngleArray[Index] = MeasuredAngle;
+				RotationRateArray[Index] = CurrentSample;
+				Index++;
+			}
+#endif
+		}
+		else //b_TrajectoryEnabled == false
+		{
+			TrajectoryState = IDLE_STATE;
+
+#if DEBUG_AUTONOMOUS_ROTATE
+			if(Index < ARRAY_INDEX)
+			{
+				R_MtrPwrArray[Index] = motor[RightMotor];
+				AngleArray[Index] = MeasuredAngle;
+				RotationRateArray[Index] = CurrentSample;
+				Index++;
+			}
 #endif
 #if DEBUG_AUTONOMOUS_TRANSLATE
-            if (T_Index < ARRAY_INDEX)
-            {
-                T_MtrPwrArray[T_Index] = motor[RightMotor];
-                TrajectoryStateArray[T_Index] = TrajectoryState;
-                DTTPArray[T_Index] = DistanceToTargetPosition;
-                EncoderCountsArray[T_Index] = GetEncoderPosition();
-                T_Index++;
-            }
+			if(T_Index < ARRAY_INDEX)
+			{
+				T_MtrPwrArray[T_Index] = motor[RightMotor];
+				TrajectoryStateArray[T_Index] = TrajectoryState;
+				DTTPArray[T_Index] = DistanceToTargetPosition;
+				EncoderCountsArray[T_Index] = GetEncoderPosition();
+				T_Index++;
+			}
 #endif
-            wait1Msec(T_CHANGE_IN_TIME);
-        }
-    }
+			wait1Msec(T_CHANGE_IN_TIME);
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -557,23 +560,23 @@ task TrajectoryGenerator()
 
 void initializeRobot()
 {
-    ResetGyro();
-    CalibrateGyro();
-    nMotorEncoder(LifterMotor) = 0;
-    servo(LifterServo) = 33; //Starting Value
-    servo(GoalServo) = 255;
-    servo(GripperServo) = 142;
-    servo(ReleaseServo) = 30;
-    servo(HookServo) = 0;
-    motor[LeftMotor] = 0;
-    motor[RightMotor] = 0;
-    BaseMode = LNR_FULL_MTR_PWR;
+	ResetGyro();
+	CalibrateGyro();
+	nMotorEncoder(LifterMotor) = 0;
+	servo(LifterServo) = 33; //Starting Value
+	servo(GoalServo) = 255;
+	servo(GripperServo) = 142;
+	servo(ReleaseServo) = 159;
+	servo(HookServo) = 0;
+	motor[LeftMotor] = 0;
+	motor[RightMotor] = 0;
+	BaseMode = LNR_FULL_MTR_PWR;
 
 
-    ChooseDelay();
-    ChoosePath();
+	ChooseDelay();
+	ChoosePath();
 
-    return;
+	return;
 }
 
 
@@ -600,979 +603,1052 @@ void initializeRobot()
 
 task main()
 {
-    initializeRobot();
+	initializeRobot();
+
+	waitForStart(); // Wait for the beginning of autonomous phase.
 
-    waitForStart(); // Wait for the beginning of autonomous phase.
+	clearTimer(T1);
+	clearDebugStream();
 
-    clearTimer(T1);
-    clearDebugStream();
+	startTask(CalculateAngle, 255);
+	startTask(TrajectoryGenerator, 90);
 
-    startTask(CalculateAngle, 255);
-    startTask(TrajectoryGenerator, 90);
+	wait1Msec(SecondsToDelay);
 
-    wait1Msec(SecondsToDelay);
+	switch (Path)
+	{
+	case 1:
+		Translate(-2500, 40); //-4100
+		WaitForMoveToFinish();
 
-    switch (Path)
-    {
-    case 1:
-        Translate(-2500, 40); //-4100
-        WaitForMoveToFinish();
+		wait1Msec(500);
 
-        wait1Msec(500);
+		Rotate(78, 30); //Turn Right
+		WaitForMoveToFinish();
 
-        Rotate(78, 30); //Turn Right
-        WaitForMoveToFinish();
+		wait1Msec(1000);
 
-        wait1Msec(1000);
+		Translate(-2800, 10); //20
 
-        Translate(-2800, 10); //20
+		while(b_TrajectoryEnabled == true)
+		{
+			Position = nMotorEncoder(RightMotor);
+			IRSensorValue = SensorValue[IRSensor];
+			if(IR_Index < ARRAY_INDEX)
+			{
+				Encoder_Array[IR_Index] = nMotorEncoder[RightMotor];
+				IR_Array[IR_Index] = SensorValue[IRSensor];
+				IR_Index++;
+			}
+			if(IRSensorValue == 7)
+			{
+				TranslateAbort();
+				break;
+			}
+			else
+			{
+				wait1Msec(20);
+			}
+		}
+		WaitForMoveToFinish();
+
+		wait1Msec(500);
+
+		if(abs(Position) > 2600)
+		{
+			//Do nothing
+		}
+		if(abs(Position) <= IR_RANGE_1)
+		{
+			if(abs(Position) < 1050)
+			{
+				Translate(755, 30);
+				WaitForMoveToFinish();
+			}
+			else
+			{
+				Translate(730, 30);
+				WaitForMoveToFinish();
+			}
 
-        while (b_TrajectoryEnabled == true)
-        {
-            Position = nMotorEncoder[RightMotor];
-            IRSensorValue = SensorValue[IRSensor];
- 
-            if (IRSensorValue == 8)
-            {
-                // Abort Move
-                b_TrajectoryEnabled = false;
+			wait1Msec(200);
 
-                // Wait some time to make sure robot is stopped
-                // before reading position.
-                wait1Msec(1000);
-            }
-            else
-            {
-                wait1Msec(20);
-            }
-        }
+			Rotate(-55, 30);//84
+			WaitForMoveToFinish();
 
-        if (abs(Position) <= IR_RANGE_1)
-        {
-            // Cascade Position 1 Detected
+			wait1Msec(500);
 
-            Translate(700, 30);
-            WaitForMoveToFinish();
+			LiftHook();
 
-            Rotate(-55, 30); //84
-            WaitForMoveToFinish();
+			wait1Msec(500);
 
-            LiftHook();
+			Translate(-1200, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(500);
+			Rotate(-25, 30);//84
+			WaitForMoveToFinish();
 
-            Translate(-900, 30);
-            WaitForMoveToFinish();
+			wait1Msec(500);
 
-            Rotate(-25, 30); //84
-            WaitForMoveToFinish();
+			Translate(1700, 50);
+			WaitForMoveToFinish();
+		}
+		else if(abs(Position) <= IR_RANGE_2)
+		{
 
-            Translate(1700, 50);
-            WaitForMoveToFinish();
-        }
-        else if (abs(Position) <= IR_RANGE_2)
-        {
-            // Cascade Position 2 Detected
+			Translate(-500, 20);
+			WaitForMoveToFinish();
 
-            Translate(-200, 20);
-            WaitForMoveToFinish();
+			wait1Msec(500);
 
-            Rotate(-78, 30);
-            WaitForMoveToFinish();
+			Rotate(-78, 30);
+			WaitForMoveToFinish();
 
-            Translate(-510, 30);
-            WaitForMoveToFinish();
+			wait1Msec(500);
 
-            Rotate(-35, 30); //84
-            WaitForMoveToFinish();
+			Translate(-960, 30); //910
+			WaitForMoveToFinish();
 
-            LiftHook();
+			LiftHook();
 
-            Translate(-600, 30);
-            WaitForMoveToFinish();
+			Rotate(-35, 20);//84
+			WaitForMoveToFinish();
 
-            Rotate(-25, 30); //84
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            Translate(1700, 70);
-            WaitForMoveToFinish();
-        }
-        else if (abs(Position) >= IR_RANGE_3)
-        {
-            // Cascade Position 3 Detected
+			Translate(-350, 20); //600
+			WaitForMoveToFinish();
 
-            Translate(-580, 30);
-            WaitForMoveToFinish();
+			Rotate(-25, 20);//84
+			WaitForMoveToFinish();
 
-            Rotate(-78, 30); //Turn Left
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            Translate(-2100, 30);
-            WaitForMoveToFinish();
+			Translate(1300, 30);
+			WaitForMoveToFinish();
+		}
+		else //Position > IR_RANGE_2 (IR_RANGE_3)
+		{
+			Translate(-780, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-45, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            LiftHook();
+			Rotate(-79, 30); //Turn Left
+			WaitForMoveToFinish();
 
-            wait1Msec(500);
+			wait1Msec(200);
+			if(abs(Position) >= 2280)
+			{
+				Translate(-1500, 30);
+				WaitForMoveToFinish();
+			}
+			else if(abs(Position) >= 2260)
+			{
+				Translate(-1535, 30);
+				WaitForMoveToFinish();
+			}
+			else
+			{
+				Translate(-1560, 30);
+				WaitForMoveToFinish();
+			}
 
-            Translate(-700, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            Rotate(-30, 30);
-            WaitForMoveToFinish();
+			Rotate(-55, 30);
+			WaitForMoveToFinish();
 
-            Translate(1500, 50);
-            WaitForMoveToFinish();
-        }
+			LiftHook();
 
-        break;
+			wait1Msec(200);
 
-    case 2:
-        //Score in Center Goal
+			Translate(-950, 30);
+			WaitForMoveToFinish();
 
-        Translate(-2500, 40); //-4100
-        WaitForMoveToFinish();
+			wait1Msec(200);
 
-        wait1Msec(500);
+			Rotate(-25, 30);
+			WaitForMoveToFinish();
 
-        Rotate(78, 30); //Turn Right
-        WaitForMoveToFinish();
+			wait1Msec(200);
 
-        wait1Msec(1000);
+			Translate(1500, 40);
+			WaitForMoveToFinish();
+		}
 
-        Translate(-2800, 20); //20
+		break;
 
-        while (b_TrajectoryEnabled == true)
-        {
-            if (IRSensorValue == 8 || IRSensorValue == 7)
-            {
-                wait1Msec(500);
-                // Abort Move
-                b_TrajectoryEnabled = false;
+	case 2:
+		//Score in Center Goal
 
-                // Wait some time to make sure robot is stopped
-                // before reading position.
-                wait1Msec(1000);
+		Translate(-2500, 40); //-4100
+		WaitForMoveToFinish();
 
-                Position = nMotorEncoder(LeftMotor);
-            }
-            else
-            {
-                wait1Msec(500);
-                Position = nMotorEncoder(LeftMotor);
-            }
-        }
+		wait1Msec(500);
 
-        if (abs(Position) > 2600)
-        {
-            //Do nothing
-        }
-        else if (abs(Position) <= IR_RANGE_1)
-        {
-            Translate(POSITION_1, 30);
-            WaitForMoveToFinish();
+		Rotate(78, 30); //Turn Right
+		WaitForMoveToFinish();
 
-            wait1Msec(200);
+		wait1Msec(1000);
 
-            Rotate(90, 30);
-            WaitForMoveToFinish();
+		Translate(-2800, 10); //20
 
-            wait1Msec(200);
+		while(b_TrajectoryEnabled == true)
+		{
+			Position = nMotorEncoder(RightMotor);
+			IRSensorValue = SensorValue[IRSensor];
+			if(IR_Index < ARRAY_INDEX)
+			{
+				Encoder_Array[IR_Index] = nMotorEncoder[RightMotor];
+				IR_Array[IR_Index] = SensorValue[IRSensor];
+				IR_Index++;
+			}
+			if(IRSensorValue == 7)
+			{
+				TranslateAbort();
+				break;
+			}
+			else
+			{
+				wait1Msec(20);
+			}
+		}
+		WaitForMoveToFinish();
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+		if(abs(Position) > 2600)
+		{
+			//Do nothing
+		}
+		else if(abs(Position) <= IR_RANGE_1)
+		{
+			Translate(POSITION_1, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			Rotate(90, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(-300, 30);
-            WaitForMoveToFinish();
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            ScoreElements_Center();
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			Translate(-300, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+			ScoreElements_Center();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(90, 30);
-            WaitForMoveToFinish();
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(-POSITION_1, 30);
-            WaitForMoveToFinish();
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            //Release the Cascade
+			Rotate(90, 30);
+			WaitForMoveToFinish();
 
-            Translate(700, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(-POSITION_1, 30);
+			WaitForMoveToFinish();
 
-            LiftHook();
+			wait1Msec(200);
 
-            Rotate(-55, 30);
-            WaitForMoveToFinish();
+			//Release the Cascade
 
-            wait1Msec(500);
+			Translate(700, 30);
+			WaitForMoveToFinish();
 
-            Translate(-990, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            Rotate(-32, 30); //84
-            WaitForMoveToFinish();
+			LiftHook();
 
-            wait1Msec(700);
+			Rotate(-55, 30);
+			WaitForMoveToFinish();
 
-            Translate(3800, 70);
-            WaitForMoveToFinish();
-        }
-        else if (abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
-        {
+			wait1Msec(500);
 
-            //Score in Center Goal
+			Translate(-990, 30);
+			WaitForMoveToFinish();
 
-            Translate(POSITION_2, 30);
-            WaitForMoveToFinish();
+			Rotate(-32, 30);//84
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(700);
 
-            Rotate(45, 30);
-            WaitForMoveToFinish();
+			Translate(3800, 70);
+			WaitForMoveToFinish();
+		}
+		else if(abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
+		{
 
-            wait1Msec(200);
+			//Score in Center Goal
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+			Translate(POSITION_2, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			Rotate(45, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(-300, 30);
-            WaitForMoveToFinish();
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            ScoreElements_Center();
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			Translate(-300, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+			ScoreElements_Center();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(135, 30);
-            WaitForMoveToFinish();
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(-POSITION_2, 30);
-            WaitForMoveToFinish();
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            //Release the Cascade
+			Rotate(135, 30);
+			WaitForMoveToFinish();
 
-            Translate(-500, 20);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(-POSITION_2, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			//Release the Cascade
 
-            Translate(-1200, 30);
-            WaitForMoveToFinish();
+			Translate(-500, 20);
+			WaitForMoveToFinish();
 
-            LiftHook();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-25, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(-1200, 30);
+			WaitForMoveToFinish();
 
-            Translate(3000, 50);
-            WaitForMoveToFinish();
-        }
-        else //Position 3
-        {
-            //Score in Center Goal
+			LiftHook();
 
-            Translate(POSITION_3, 50);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-25, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-90, 50);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(3000, 50);
+			WaitForMoveToFinish();
+		}
+		else //Position 3
+		{
+			//Score in Center Goal
 
-            Translate(-300, 50);
-            WaitForMoveToFinish();
+			Translate(POSITION_3, 50);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            ScoreElements_Center();
+			Rotate(-90, 50);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(90, 50);
-            WaitForMoveToFinish();
+			Translate(-300, 50);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(-POSITION_3, 50);
-            WaitForMoveToFinish();
+			ScoreElements_Center();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            //Release the Cascade
+			Rotate(90, 50);
+			WaitForMoveToFinish();
 
-            Translate(-580, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(-POSITION_3, 50);
+			WaitForMoveToFinish();
 
-            Rotate(-85, 30); //Turn Left
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			//Release the Cascade
 
-            Translate(-2100, 30);
-            WaitForMoveToFinish();
+			Translate(-580, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-45, 30);
-            WaitForMoveToFinish();
+			Rotate(-85, 30); //Turn Left
+			WaitForMoveToFinish();
 
-            LiftHook();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(-2100, 30);
+			WaitForMoveToFinish();
 
-            Translate(-700, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-45, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-30, 30);
-            WaitForMoveToFinish();
+			LiftHook();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Translate(1500, 50);
-            WaitForMoveToFinish();
-        }
+			Translate(-700, 30);
+			WaitForMoveToFinish();
 
-        break;
+			wait1Msec(200);
 
-    case 3:
+			Rotate(-30, 30);
+			WaitForMoveToFinish();
 
-        //Score in Center Goal
+			wait1Msec(200);
 
-        Translate(-4100, 50);
-        WaitForMoveToFinish();
+			Translate(1500, 50);
+			WaitForMoveToFinish();
+		}
 
-        wait1Msec(500);
+		break;
 
-        Rotate(80, 50); //Turn Right
-        WaitForMoveToFinish();
+	case 3:
 
-        wait1Msec(1000);
+		//Score in Center Goal
 
-        Translate(-5000, 15); //20
+		Translate(-4100, 50);
+		WaitForMoveToFinish();
 
-        while (b_TrajectoryEnabled == true)
-        {
-            if (IRSensorValue == 8)
-            {
-                wait1Msec(500);
-                // Abort Move
-                b_TrajectoryEnabled = false;
+		wait1Msec(500);
 
-                // Wait some time to make sure robot is stopped
-                // before reading position.
-                wait1Msec(1000);
+		Rotate(80, 50); //Turn Right
+		WaitForMoveToFinish();
 
-                Position = nMotorEncoder(LeftMotor);
-            }
-            else
-            {
-                wait1Msec(500);
-                Position = nMotorEncoder(LeftMotor);
-            }
-        }
+		wait1Msec(1000);
 
-        if (abs(Position) > 4800)
-        {
-            //Do nothing
-        }
-        else if (abs(Position) <= IR_RANGE_1)
-        {
-            Translate(POSITION_1, 30);
-            WaitForMoveToFinish();
+		Translate(-5000, 15); //20
 
-            wait1Msec(200);
+		while(b_TrajectoryEnabled == true)
+		{
+			if(IRSensorValue == 8)
+			{
+				wait1Msec(500);
+				// Abort Move
+				b_TrajectoryEnabled = false;
 
-            Rotate(90, 30);
-            WaitForMoveToFinish();
+				// Wait some time to make sure robot is stopped
+				// before reading position.
+				wait1Msec(1000);
 
-            wait1Msec(200);
+				Position = nMotorEncoder(LeftMotor);
+			}
+			else
+			{
+				wait1Msec(500);
+				Position = nMotorEncoder(LeftMotor);
+			}
+		}
+		if(abs(Position) > 4800)
+		{
+			//Do nothing
+		}
+		else if(abs(Position) <= IR_RANGE_1)
+		{
+			Translate(POSITION_1, 30);
+			WaitForMoveToFinish();
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(90, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            Translate(-300, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            ScoreElements_Center();
-        }
-        else if (abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
-        {
+			wait1Msec(200);
 
-            //Score in Center Goal
+			Translate(-300, 30);
+			WaitForMoveToFinish();
 
-            Translate(POSITION_2, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			ScoreElements_Center();
+		}
+		else if(abs(Position) > IR_RANGE_1 && abs(Position) <= IR_RANGE_2)
+		{
 
-            Rotate(45, 30);
-            WaitForMoveToFinish();
+			//Score in Center Goal
 
-            wait1Msec(200);
+			Translate(POSITION_2, 30);
+			WaitForMoveToFinish();
 
-            Translate(1500, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(45, 30);
+			WaitForMoveToFinish();
 
-            Rotate(-90, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Translate(1500, 30);
+			WaitForMoveToFinish();
 
-            Translate(-300, 30);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-90, 30);
+			WaitForMoveToFinish();
 
-            ScoreElements_Center();
-        }
-        else //Position 3
-        {
-            //Score in Center Goal
+			wait1Msec(200);
 
-            Translate(POSITION_3, 50);
-            WaitForMoveToFinish();
+			Translate(-300, 30);
+			WaitForMoveToFinish();
 
-            wait1Msec(200);
+			wait1Msec(200);
 
-            Rotate(-90, 50);
-            WaitForMoveToFinish();
+			ScoreElements_Center();
+		}
+		else //Position 3
+		{
+			//Score in Center Goal
 
-            wait1Msec(200);
+			Translate(POSITION_3, 50);
+			WaitForMoveToFinish();
 
-            Translate(-300, 50);
-            WaitForMoveToFinish();
+			wait1Msec(200);
 
-            wait1Msec(200);
+			Rotate(-90, 50);
+			WaitForMoveToFinish();
 
-            ScoreElements_Center();
-        }
+			wait1Msec(200);
 
-        break;
+			Translate(-300, 50);
+			WaitForMoveToFinish();
 
-    case 4:
-        Translate(-3000, 20);
-        WaitForMoveToFinish();
+			wait1Msec(200);
 
-        break;
+			ScoreElements_Center();
+		}
 
-    case 5:
-        Translate(-4000, 20);
-        WaitForMoveToFinish();
+		break;
 
-        wait1Msec(200);
+	case 4:
+		Translate(-3000, 20);
+		while(b_TrajectoryEnabled == true)
+		{
+			Position = nMotorEncoder(RightMotor);
+			if(Position <= -1000)
+			{
+				TranslateAbort();
+				break;
+			}
+			else
+			{
+				wait1Msec(20);
+			}
+		}
+		WaitForMoveToFinish();
+		break;
 
-        LowerGrabber();
+	case 5:
+		Translate(-4000, 20);
+		WaitForMoveToFinish();
 
-        ScoreElements_Med();
+		wait1Msec(200);
 
-        break;
+		LowerGrabber();
 
-    case 6:
-        Translate(-4000, 20);
-        WaitForMoveToFinish();
+		ScoreElements_Med();
 
-        wait1Msec(200);
+		break;
 
-        LowerGrabber();
+	case 6:
+		Translate(-4000, 20);
+		WaitForMoveToFinish();
 
-        ScoreElements_Med();
+		wait1Msec(200);
 
-        Translate(500, 30);
-        WaitForMoveToFinish();
+		LowerGrabber();
 
-        wait1Msec(200);
+		ScoreElements_Med();
 
-        Rotate(90, 30);
-        WaitForMoveToFinish();
+		Translate(500, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(3000, 30);
-        WaitForMoveToFinish();
+		Rotate(90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(3000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(5000, 30);
-        WaitForMoveToFinish();
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(5000, 30);
+		WaitForMoveToFinish();
 
-        break;
+		wait1Msec(200);
 
-    case 7:
-        Translate(-3000, 20);
-        WaitForMoveToFinish();
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		break;
 
-        Rotate(90, 30);
-        WaitForMoveToFinish();
+	case 7:
+		Translate(-3000, 20);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(1000, 30);
-        WaitForMoveToFinish();
+		Rotate(90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(90, 30);
-        WaitForMoveToFinish();
+		Translate(1000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(4000, 30);
-        WaitForMoveToFinish();
+		Rotate(90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(4000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(-1000, 30);
-        WaitForMoveToFinish();
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        LowerGrabber();
+		Translate(-1000, 30);
+		WaitForMoveToFinish();
 
-        ScoreElements_Med();
+		wait1Msec(200);
 
-        break;
+		LowerGrabber();
 
-    default:
-        Translate(-3000, 20);
-        WaitForMoveToFinish();
+		ScoreElements_Med();
 
-        wait1Msec(200);
+		break;
 
-        Rotate(90, 30);
-        WaitForMoveToFinish();
+	default:
+		Translate(-3000, 20);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(1000, 30);
-        WaitForMoveToFinish();
+		Rotate(90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(90, 30);
-        WaitForMoveToFinish();
+		Translate(1000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(4000, 30);
-        WaitForMoveToFinish();
+		Rotate(90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(4000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(-1000, 30);
-        WaitForMoveToFinish();
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        LowerGrabber();
+		Translate(-1000, 30);
+		WaitForMoveToFinish();
 
-        ScoreElements_Med();
+		wait1Msec(200);
 
-        wait1Msec(200);
+		LowerGrabber();
 
-        Translate(1000, 30);
-        WaitForMoveToFinish();
+		ScoreElements_Med();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(1000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Translate(5000, 30);
-        WaitForMoveToFinish();
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
+		wait1Msec(200);
 
-        Rotate(-90, 30);
-        WaitForMoveToFinish();
+		Translate(5000, 30);
+		WaitForMoveToFinish();
 
-        wait1Msec(200);
-    }
+		wait1Msec(200);
+
+		Rotate(-90, 30);
+		WaitForMoveToFinish();
+
+		wait1Msec(200);
+	}
+	for(IR_Index=0; IR_Index<ARRAY_INDEX; IR_Index++)
+	{
+		wait1Msec(10);
+		writeDebugStream("%d,", Encoder_Array[IR_Index]);
+		wait1Msec(10);
+		writeDebugStream("%d\n,", IR_Array[IR_Index]);
+		wait1Msec(10);
+	}
 
 #if DEBUG_AUTONOMOUS_ROTATE
-    for (Index = 0; Index < ARRAY_INDEX; Index++)
-    {
-        wait1Msec(10);
-        writeDebugStream("%d,", R_MtrPwrArray[Index]);
-        wait1Msec(10);
-        writeDebugStream("%f,", AngleArray[Index]);
-        wait1Msec(10);
-        writeDebugStream("%f\n", RotationRateArray[Index]);
-    }
+	for(Index=0; Index<ARRAY_INDEX; Index++)
+	{
+		wait1Msec(10);
+		writeDebugStream("%d,", R_MtrPwrArray[Index]);
+		wait1Msec(10);
+		writeDebugStream("%f,", AngleArray[Index]);
+		wait1Msec(10);
+		writeDebugStream("%f\n", RotationRateArray[Index]);
+	}
 #endif
 
 }
 
 void CalibrateGyro()
 {
-    for (i = 0; i < 20; i++)
-    {
-        wait1Msec(10);
-        Offset = Offset + SensorValue(GyroSensor);
-    }
-    Offset = Offset / 20;
+	for(i = 0; i<20;i++)
+	{
+		wait1Msec(10);
+		Offset = Offset + SensorValue(GyroSensor);
+	}
+	Offset = Offset/20;
 }
 
 void ResetGyro()
 {
-    b_TrajectoryEnabled = false;
-    TargetAngle = 0;
-    CurrentSample = 0;
-    PreviousSample = 0;
-    MeasuredAngle = 0;
+	b_TrajectoryEnabled = false;
+	TargetAngle = 0;
+	CurrentSample = 0;
+	PreviousSample = 0;
+	MeasuredAngle = 0;
 }
 
 void Rotate(long SetTargetAngle, byte SetMaxMotorPower)
 {
-    ResetGyro();
-    TargetAngle = SetTargetAngle;
-    MaxMotorPower = SetMaxMotorPower;
-    b_TrajectoryEnabled = true;
-    TrajectoryMode = ROTATE;
+	ResetGyro();
+	TargetAngle = SetTargetAngle;
+	MaxMotorPower = SetMaxMotorPower;
+	b_TrajectoryEnabled = true;
+	TrajectoryMode = ROTATE;
 
-    if (TargetAngle < 0)
-    {
-        DirFactor = -1;
-    } else // TargetAngle > 0
-    {
-        DirFactor = 1;
-    }
+	if(TargetAngle < 0)
+	{
+		DirFactor = -1;
+	}
+	else // TargetAngle > 0
+	{
+		DirFactor = 1;
+	}
 }
 
 void ResetEncoders()
 {
-    b_TrajectoryEnabled = false;
-    TargetPosition = 0;
-    nMotorEncoder[RightMotor] = 0;
-    nMotorEncoder[LeftMotor] = 0;
+	b_TrajectoryEnabled = false;
+	TargetPosition = 0;
+	nMotorEncoder[RightMotor] = 0;
+	nMotorEncoder[LeftMotor] = 0;
 }
 
 int GetEncoderPosition()
 {
-    return nMotorEncoder[RightMotor];
+	return nMotorEncoder[RightMotor];
 }
 
 void Translate(int SetTargetPosition, byte SetMaxMotorPower)
 {
-    ResetEncoders();
-    TargetPosition = SetTargetPosition;
-    MaxMotorPower = SetMaxMotorPower;
-    b_TrajectoryEnabled = true;
-    TrajectoryMode = TRANSLATE;
+	ResetEncoders();
+	TargetPosition = SetTargetPosition;
+	MaxMotorPower = SetMaxMotorPower;
+	b_TrajectoryEnabled = true;
+	TrajectoryMode = TRANSLATE;
 
-    if (TargetPosition < 0)
-    {
-        DirFactor = -1;
-    } else // TargetPosition > 0
-    {
-        DirFactor = 1;
-    }
+	if(TargetPosition < 0)
+	{
+		DirFactor = -1;
+	}
+	else // TargetPosition > 0
+	{
+		DirFactor = 1;
+	}
 }
 
 void WaitForMoveToFinish()
 {
-    while (b_TrajectoryEnabled == true)
-    {
-        wait1Msec(10);
-    }
+	while(b_TrajectoryEnabled == true)
+	{
+		wait1Msec(10);
+	}
 }
 
 void ChooseDelay()
 {
-    nButtonPresses = 0;
-    eraseDisplay();
+	nButtonPresses = 0;
+	eraseDisplay();
 
-    while (nNxtButtonPressed != 3)
-    {
+	while(nNxtButtonPressed != 3)
+	{
 
-        displayCenteredTextLine(1, "Delay Time?");
+		displayCenteredTextLine(1, "Delay Time?");
 
-        displayCenteredBigTextLine(3, "%d", nButtonPresses);
+		displayCenteredBigTextLine(3, "%d", nButtonPresses);
 
-        if (nNxtButtonPressed == 1)
-        {
-            nButtonPresses += 1;
-            displayCenteredBigTextLine(3, "%d", nButtonPresses);
-            while (nNxtButtonPressed != -1) //wait for release
-            {
-                //do nothing
-            }
-        }
+		if(nNxtButtonPressed == 1)
+		{
+			nButtonPresses += 1;
+			displayCenteredBigTextLine(3, "%d", nButtonPresses);
+			while(nNxtButtonPressed != -1)//wait for release
+			{
+				//do nothing
+			}
+		}
 
-        if (nNxtButtonPressed == 2)
-        {
-            nButtonPresses -= 1;
-            displayCenteredBigTextLine(3, "%d", nButtonPresses);
-            while (nNxtButtonPressed != -1) //wait for release
-            {
-                //do nothing
-            }
-        }
-    }
+		if(nNxtButtonPressed == 2)
+		{
+			nButtonPresses -= 1;
+			displayCenteredBigTextLine(3, "%d", nButtonPresses);
+			while(nNxtButtonPressed != -1)//wait for release
+			{
+				//do nothing
+			}
+		}
+	}
 
-    SecondsToDelay = nButtonPresses * 1000;
+	SecondsToDelay = nButtonPresses*1000;
 
-    eraseDisplay();
+	eraseDisplay();
 
-    displayCenteredBigTextLine(3, "%d", SecondsToDelay);
+	displayCenteredBigTextLine(3, "%d", SecondsToDelay);
 
-    wait1Msec(1000);
+	wait1Msec(1000);
 
-    eraseDisplay();
+	eraseDisplay();
 
-    return;
+	return;
 }
 
 void ChoosePath()
 {
-    nButtonPresses = 0;
-    eraseDisplay();
+	nButtonPresses = 0;
+	eraseDisplay();
 
-    while (nNxtButtonPressed != 3)
-    {
+	while(nNxtButtonPressed != 3)
+	{
 
-        displayCenteredTextLine(1, "Which Path?");
+		displayCenteredTextLine(1, "Which Path?");
 
-        displayCenteredBigTextLine(3, "%d", nButtonPresses);
+		displayCenteredBigTextLine(3, "%d", nButtonPresses);
 
-        if (nNxtButtonPressed == 1)
-        {
-            nButtonPresses += 1;
-            displayCenteredBigTextLine(3, "%d", nButtonPresses);
-            while (nNxtButtonPressed != -1) //wait for release
-            {
-                //do nothing
-            }
-        }
+		if(nNxtButtonPressed == 1)
+		{
+			nButtonPresses += 1;
+			displayCenteredBigTextLine(3, "%d", nButtonPresses);
+			while(nNxtButtonPressed != -1)//wait for release
+			{
+				//do nothing
+			}
+		}
 
-        if (nNxtButtonPressed == 2)
-        {
-            nButtonPresses -= 1;
-            displayCenteredBigTextLine(3, "%d", nButtonPresses);
-            while (nNxtButtonPressed != -1) //wait for release
-            {
-                //do nothing
-            }
-        }
-    }
+		if(nNxtButtonPressed == 2)
+		{
+			nButtonPresses -= 1;
+			displayCenteredBigTextLine(3, "%d", nButtonPresses);
+			while(nNxtButtonPressed != -1)//wait for release
+			{
+				//do nothing
+			}
+		}
+	}
 
-    Path = nButtonPresses;
+	Path = nButtonPresses;
 
-    eraseDisplay();
+	eraseDisplay();
 
-    displayCenteredBigTextLine(3, "%d", Path);
+	displayCenteredBigTextLine(3, "%d", Path);
 
-    wait1Msec(1000);
+	wait1Msec(1000);
 
-    eraseDisplay();
+	eraseDisplay();
 
-    return;
+	return;
 }
 
 void LiftHook()
 {
-    servo[HookServo] = 95;
-    wait1Msec(400);
+	servo[HookServo] = 95;
+	wait1Msec(400);
 }
 
 void LowerGrabber()
 {
-    servo[GoalServo] = 145;
-    wait1Msec(500);
+	servo[GoalServo] = 145;
+	wait1Msec(500);
 }
 
 void ScoreElements_Center()
 {
-    nMotorEncoder[LifterMotor] = 0;
+	nMotorEncoder[LifterMotor] = 0;
 
-    //Lift Slides
+	//Lift Slides
 
-    nMotorEncoderTarget[LifterMotor] = 2000;
+	nMotorEncoderTarget[LifterMotor] = 2000;
 
-    motor[LifterMotor] = 100;
+	motor[LifterMotor] = 100;
 
-    while (nMotorRunState(LifterMotor) != runStateIdle)
-    {
-        //wait til finished
-    }
+	while(nMotorRunState(LifterMotor) != runStateIdle)
+	{
+		//wait til finished
+	}
 
-    motor[LifterMotor] = 0;
+	motor[LifterMotor] = 0;
 
-    //Dump elements
+	//Dump elements
 
-    servo(LifterServo) = 200;
+	servo(LifterServo) = 200;
 
-    wait1Msec(1500);
+	wait1Msec(1500);
 
-    servo(LifterServo) = 0;
+	servo(LifterServo) = 0;
 
-    wait1Msec(200);
+	wait1Msec(200);
 
-    //Lower Slides
+	//Lower Slides
 
-    nMotorEncoderTarget[LifterMotor] = MIN_LIFTER_VALUE;
+	nMotorEncoderTarget[LifterMotor] = MIN_LIFTER_VALUE;
 
-    motor[LifterMotor] = -10;
+	motor[LifterMotor] = -10;
 
-    while (nMotorRunState(LifterMotor) != runStateIdle)
-    {
-        //wait til finished
-    }
+	while(nMotorRunState(LifterMotor) != runStateIdle)
+	{
+		//wait til finished
+	}
 
-    motor[LifterMotor] = 0;
+	motor[LifterMotor] = 0;
 
-    //Move Forward
+	//Move Forward
 
-    wait1Msec(200);
+	wait1Msec(200);
 
-    Translate(300, 20);
-    WaitForMoveToFinish();
+	Translate(300, 20);
+	WaitForMoveToFinish();
 }
 
 void ScoreElements_Med()
 {
-    nMotorEncoder[LifterMotor] = 0;
+	nMotorEncoder[LifterMotor] = 0;
 
-    //Lift Slides
+	//Lift Slides
 
-    nMotorEncoderTarget[LifterMotor] = 1000;
+	nMotorEncoderTarget[LifterMotor] = 1000;
 
-    motor[LifterMotor] = 100;
+	motor[LifterMotor] = 100;
 
-    while (nMotorRunState(LifterMotor) != runStateIdle)
-    {
-        //wait til finished
-    }
+	while(nMotorRunState(LifterMotor) != runStateIdle)
+	{
+		//wait til finished
+	}
 
-    motor[LifterMotor] = 0;
+	motor[LifterMotor] = 0;
 
-    //Dump elements
+	//Dump elements
 
-    servo(LifterServo) = 255;
+	servo(LifterServo) = 255;
 
-    wait1Msec(1500);
+	wait1Msec(1500);
 
-    servo(LifterServo) = 33;
+	servo(LifterServo) = 33;
 
-    wait1Msec(200);
+	wait1Msec(200);
 
-    //Lower Slides
+	//Lower Slides
 
-    nMotorEncoderTarget[LifterMotor] = MIN_LIFTER_VALUE;
+	nMotorEncoderTarget[LifterMotor] = MIN_LIFTER_VALUE;
 
-    motor[LifterMotor] = -10;
+	motor[LifterMotor] = -10;
 
-    while (nMotorRunState(LifterMotor) != runStateIdle)
-    {
-        //wait til finished
-    }
+	while(nMotorRunState(LifterMotor) != runStateIdle)
+	{
+		//wait til finished
+	}
 
-    motor[LifterMotor] = 0;
+	motor[LifterMotor] = 0;
 
-    //Move Forward
+	//Move Forward
 
-    wait1Msec(200);
+	wait1Msec(200);
 
-    Translate(300, 20);
-    WaitForMoveToFinish();
+	Translate(300, 20);
+	WaitForMoveToFinish();
 }
 
+void TranslateAbort()
+{
+	TargetPosition = GetEncoderPosition() + (DirFactor*T_DECEL_RANGE_FACTOR);
+}
