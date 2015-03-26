@@ -71,7 +71,7 @@
 #define LNR_FOURTH_MTR_PWR							2
 #define IR_RANGE_1									 1370
 #define IR_RANGE_2								   1700
-#define POSITION_1									 2200
+#define POSITION_1									 2050
 #define POSITION_2								   1000
 #define POSITION_3								   1000
 #define MAX_LIFTER_VALUE			    	14400
@@ -560,7 +560,7 @@ task TrajectoryGenerator()
 			{
 				if(DirFactor == 1)
 				{
-					motor[LifterMotor] = (i*DirFactor) + 70;
+					motor[LifterMotor] = (i*DirFactor) + 90;
 				}
 				else
 				{
@@ -898,7 +898,7 @@ task main()
 
 		wait1Msec(500);
 
-		Rotate(78, 30); //Turn Right
+		Rotate(79, 40); //Turn Right
 		WaitForMoveToFinish();
 
 		wait1Msec(1000);
@@ -948,22 +948,22 @@ task main()
 
 			wait1Msec(200);
 
-			Rotate(78, 30);
+			Rotate(77, 40);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
 
-			Translate(1645, 30);
+			Translate(1620, 40);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
 
-			Rotate(-76, 26);
+			Rotate(-77, 40);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
 
-			Translate(-380, 10);
+			Translate(-250, 10);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
@@ -971,41 +971,59 @@ task main()
 			ScoreElements_Center();
 
 			wait1Msec(200);
-			
-			Translate(320, 10);
-			WaitForMoveToFinish();
 
-			//Rotate(-78, 30);
-			//WaitForMoveToFinish();
-
-			/*wait1Msec(200);
-
-			Translate(1500, 30);
+			Translate(250, 20);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
 
-			Rotate(90, 30);
+			Rotate(-77, 40);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
 
-			Translate(-POSITION_1, 30);
+			Translate(1500, 40);
 			WaitForMoveToFinish();
 
 			wait1Msec(200);
+
+			Rotate(78, 40);
+			WaitForMoveToFinish();
+
+			wait1Msec(200);
+
+			/*if(abs(Position) > 1500)
+			{
+				Translate(-(POSITION_1 - 800), 30);
+				WaitForMoveToFinish();
+			}
+			else
+			{
+				Translate(-POSITION_1, 30);
+				WaitForMoveToFinish();
+			}
 
 			//Release the Cascade
 
 			if(abs(Position) < 1050)
 			{
-			Translate(755, 30);
-			WaitForMoveToFinish();
+				Translate(755, 30);
+				WaitForMoveToFinish();
+			}
+			else if(abs(Position) > 1600)
+			{
+				Translate(1455, 30);
+				WaitForMoveToFinish();
+			}
+			else if(abs(Position) > 1500)
+			{
+				Translate(1255, 30);
+				WaitForMoveToFinish();
 			}
 			else
 			{
-			Translate(730, 30);
-			WaitForMoveToFinish();
+				Translate(730, 30);
+				WaitForMoveToFinish();
 			}
 
 			wait1Msec(200);
@@ -1683,24 +1701,24 @@ void ScoreElements_Center()
 
 	//Lift Slides
 
-	MoveSlides(14450, 100);
+	MoveSlides(14440, 100);
 	WaitForMoveToFinish();
-	
+
 		//Dump elements
 
 	servo(LifterServo) = 255;
 	servo(ReleaseServo) = 37;
 
 	wait1Msec(2000);
-	
+
 	servo(ReleaseServo) = 159;
 	servo(LifterServo) = 33;
 
 	wait1Msec(500);
-	
+
 	nMotorEncoder[LifterMotor] = 0;
-	
-	MoveSlides(-14390, 50);
+
+	MoveSlides(-14290, 70);
 	WaitForMoveToFinish();
 
 	//Lower Slides
